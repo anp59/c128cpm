@@ -1,0 +1,921 @@
+CPM4.TXT rev 1a 96-11-01
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    THIS DOCUMENT IS COPYRIGHT (C) 1988, 1996 BY HERNE DATA
+    SYSTEMS LTD. THE MATERIAL CONTAINED HEREIN MAY BE FREELY
+    USED FOR PERSONAL INFORMATION ONLY. IF YOU REPRODUCE IT,
+    THIS COPYRIGHT NOTICE MUST NOT BE REMOVED. THIS MATERIAL
+    MAY NOT BE EXPLOITED FOR COMMERCIAL PURPOSES.
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+Herne Data Systems Ltd., 
+PO Box 250, Tiverton, ON N0G 2T0 CANADA.  
+Voice/fax 519-366-2732, 
+e-mail herne@herne.com
+internet: http://www.herne.com
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+                               The Console
+                               ===========
+                                    
+
+The Command Line
+             
+Keys For Processing CP/M Command Line
+
+The key labelled CRSR with up and down arrows (bottom right on
+keyboard) generates the value 17 (same as '<CONTROL>-w') and
+causes the latest CP/M command line to be displayed on the
+screen.  The key next to this (CRSR with right and left arrows)
+allows you to move right and left (unshifted and shifted,
+respectively) through this command string to edit.  This is
+useful for correcting typing mistakes in lengthy command
+sequences.
+
+
+Selectively Displayed Disk Status Line
+
+There is an optional disk status displayed at the bottom right
+corner of the screen. The format of this status line is as
+follows:
+
+               O Dtt ss
+where: O  =Operation, either R or W indicating a Read or Write 
+       D  =the logical drive (A,B,C,D, etc)
+      tt  =the track number currently being read or written
+      ss  =the sector number currently being read or written
+
+Normally, the track and sector number are separated by a space. 
+If the disk is formatted MFM, and the track and sector are
+separated by a '-', the second side of the disk is currently
+being accessed.
+
+You can toggle this status to be displayed or not by typing the
+RUN/STOP key and the control key simultaneously.
+
+
+Keyboard Definitions
+
+The Commodore 128 Keyboard is defined for CP/M as follows:
+
+Each key has 4 values associated with it. These are defined as
+the unshifted, value, the shifted value, the control value and
+the CAPS LOCK value.  The UNSHIFTED value is basically the key as
+labelled, and is produced by typing the key; the SHIFTED value
+represents the key, as labelled, when typed with one of the SHIFT
+keys on either side of the space bar; the CONTROL value is the
+value produced by typing the key and the CONTROL key
+simultaneously; the CAPS LOCK value is the value produced when in
+CAPS LOCK mode. (CAPS LOCK mode is entered by typing the
+COMMODORE key and remains in effect until this key is typed
+again.  This value is therefore typically documented as the CAPS
+LOCK value.) 
+
+
+SPECIAL KEYS
+
+Numeric Keys
+
+The alpha keys generate the standard lower case, upper case and
+control values. The CAPS LOCK value is merely the upper case
+value. The numeric keys (the row of keys above the alpha keys)
+produce the appropriate number as the unshifted value and the
+CAPS LOCK value, the symbol above the number on the key as the
+shifted value and the color on the side of the key (the top one
+of the two colors shown) as the control value.  These colors are
+defined as 80 column foreground colors.  The control value
+produced by the numbers on the numeric keypad are defined the
+same as those on the numeric keys, except that they generate 80
+column background colors.
+
+ 
+Arrow Keys
+
+The up arrow key generates the value 05 (same as 'CONTROLe') as
+the unshifted, shifted and CAPS LOCK values;  it generates the
+hexadecimal 12 (same as 'CONTROLr') as the control value.
+
+The down arrow key generates the hexadecimal value 18 (same as
+'CONTROLx') as the unshifted, shifted and CAPS LOCK values; it
+generates the value 03 (same as 'CONTROLc') as the control value.
+
+The left arrow key generates the hexadecimal value 14 (same as
+'CONTROLs') as the unshifted, shifted and CAPS LOCK values; it
+executes the 40 column screen left function as the control value.
+
+The right arrow key generates the value 04 (same as 'CONTROLd')
+as the unshifted, shifted and CAPS LOCK values; it executes the
+40 column screen right functions as the control value.
+
+
+Additional Key Characters
+
+The key labelled as a British pound sign generates the character
+'#' as the unshifted, shifted and CAPS LOCK values; the character
+'`' is generated as the control value.
+ 
+The up arrow key next to the RESTORE key generates the character
+'^' as the shifted and control values; the pipe character '|' is
+generated as the unshifted and CAPS LOCK values. 
+
+The '=' key generates the character '=' as the unshifted, shifted
+and CAPS LOCK values; the character '~' is generated as the
+control value.
+
+The '/' key generates the character '/' as the unshifted, shifted
+and CAPS LOCK values; the character '\' is generated as the
+control value.
+
+The key labelled 'INST DEL' generates the hexadecimal value 7f
+(ASCII rubout) as the unshifted, shifted and CAPS LOCK values;
+the hexadecimal value 16 (same as 'CONTROL v' is generated as the
+control value.
+
+
+DEFAULT KEYBOARD VALUES
+
+The default keyboard definition values are as follows (values in
+hex, sorted by 'Unshifted' value):
+
+
+Main Keyboard Keys:
+Unshifted CapsLock  Shifted        Control        Key
+00        00        00             00             (LEFT SHIFT) 
+00        00        00             F5             CLEAR/ HOME 
+00        00        00             00             (RIGHT SHIFT) 
+00        00        00             F0             RUN STOP 
+06        06        01             01             LEFT RIGHT 
+09        15        30             00             (CONTROL)
+                                                  SOUND1 SOUND2 
+0D        0D        0D             0D             RETURN 
+17        17        17             1A             UP DOWN 
+20        20        20             00             SPACE 
+21        20        00             00             (COMMODORE)
+                                                  SOUND3 
+23        23        23             60             œ ` 
+2A        2A        2A             00             * 
+2B        2B        2B             00             + 
+2C        2C        3C             00             ,< 
+2D        2D        2D             00             - 
+2E        2E        3E             00             . > 
+2F        2F        3F             5C             / ? \ 
+30        30        30             00             0 
+31        31        21             A0             1 
+32        32        22             A1             2 " 
+33        33        23             A2             3 # 
+34        34        24             A3             4 $ 
+35        35        25             A4             5 % 
+36        36        26             A5             6 & 
+37        37        27             A6             7 ' 
+38        38        28             A7             8 ( 
+39        39        29             00             9 ) 
+3A        3A        5B             7B             : [ { 
+3B        3B        5D             7D             ; ] } 
+3D        3D        3D             7E             = ~ 
+40        40        40             00             @ 
+5E        5E        7C             7C             ^ | 
+5F        5F        5F             7F              <- 
+61        41        41             01             A 
+62        42        42             02             B 
+63        43        43             03             C 
+64        44        44             04             D 
+65        45        45             05             E 
+66        46        46             06             F 
+67        47        47             07             G 
+68        48        48             08             H
+69        49        49             09             I 
+6A        4A        4A             0A             J 
+6B        4B        4B             0B             K 
+6C        4C        4C             0C             L 
+6D        4D        4D             0D             M 
+6E        4E        4E             0E             N 
+6F        4F        4F             0F             O 
+70        50        50             10             P 
+71        51        51             11             Q 
+72        52        52             12             R 
+73        53        53             13             S 
+74        54        54             14             T 
+75        55        55             15             U 
+76        56        56             16             V 
+77        57        57             17             W 
+78        58        58             18             X 
+79        59        59             19             Y 
+7A        5A        5A             1A             Z 
+7F        7F        7F             16        INS DEL 
+80        80        81             81             F1 F2 
+82        82        83             83             F3 F4 
+84        84        85             85             F5 F6 
+86        86        87             87             F7 F8 
+ 
+Extra Keypad Keys:
+00        00        00             00             /ALT/ 
+04        04        04             8E             /RIGHT/ 
+05        05        05             12             /UP/ 
+09        09        09             00             /TAB/ 
+0A        0A        0A             0A             /LINE FEED/ 
+0D        0D        0D             FF             /ENTR/ 
+13        13        13             8D             /LEFT/ 
+18        18        18             03             /DN/ 
+1B        1B        1B             00             /ESC/ 
+2B        2B        2B             F7             +(SELECT VT100)
+2D        2D        2D             F6             -(SELECT ADM31)
+2E        2E        2E             00             . 
+30        30        30             00             0 
+31        31        31             B0             1 
+32        32        32             B1             2 
+33        33        33             B2             3 
+34        34        34             B3             4 
+35        35        35             B4             5 
+36        36        36             B5             6 
+37        37        37             B6             7 
+38        38        38             B7             8 
+39        39        39             00             9 
+9F        9F        9F             9F             /HELP/ 
+F1        F1        F1             F2             /NO SCROLL/ 
+ 
+ 
+FUNCTION KEY VALUES:
+
+KEY CODE       STRING
+80             'F1'
+81             'F2'
+82             'dir',cr
+83             'dir '
+84             'F5'
+85             'F6'
+86             'F7'
+87             date
+88             'F9'
+89             'F10'
+8A             'F11'
+8B             f3, f3, f3, f3, f3, f3, f3, f3, f3, f3, f3, f3,
+               f3, f3, f3, f3, f3, f3, f3, f3
+8C             f4, f4, f4, f4, f4, f4, f4, f4, f4, f4, f4, f4,
+               f4, f4, f4, f4, f4, f4, f4, f4
+8D             f3, f3, f3, f3
+8E             f4, f4, f4, f4
+8F             'F16'
+90             'F17'
+91             'F18'
+92             'F19'
+93             'F20'
+94             'F21'
+95             'F22'
+96             'F23'
+97             'F24'
+98             'F25'
+99             'F26'
+9A             'F27'
+9B             'F28'
+9C             'F29'
+9D             'F30'
+9E             'F31'
+9F             'Help '
+
+
+DEFAULT LOGICAL COLOR TABLE: 
+00   11   22   33   44   55   66   77 
+88   99   AA   BB   CC   DD   EE   FF 
+
+
+
+Control/Right SHIFT Functions
+
+There are 3 functions which are selected by typing the CONTROL
+key, the RIGHT SHIFT key (the SHIFT key to the right of the space
+bar) and the appropriate key for the desired function
+simultaneously. The 3 keys to enable the desired functions are:
+the key labelled ALT, which is used to select between remote and
+local handling of certain key values, the right arrow key which
+is used to initiate editing function keys, and the left arrow
+key, which is used to initiate replacement of key values with a
+hexadecimal value. The last 2 functions allow you to edit key
+definitions directly, without using the KEYFIG program.  
+
+
+ <Control Rt SHFT ALT> Mode Toggle
+
+The key labelled ALT is used to toggle between handling certain
+functions at the keyboard level or passing the appropriate key
+code to a remote application for processing.  These functions
+include all hexadecimal key values between 80 and ff. These are
+defined as follows:
+
+80-9f     identify function strings
+a0-af     identify 80 column foreground colors
+b0-bf     identify 80 column background colors
+c0-cf     identify 40 column foreground colors
+d0-df     identify 40 column background colors
+e0-ef     identify 40 column border colors
+f0-ff     identify special functions
+
+The default mode is that these keycodes are handled locally.  In
+this mode, the functions as defined above are executed.  If
+remote handling of these codes is selected, the appropriate
+keycode (80-ff) is passed along to a remote application which
+processes it however it wishes.
+
+ 
+String Edit <CTL RTSHFT Right Arrow>       
+
+To edit a string type the CONTROL KEY,  the RIGHT SHIFT key and
+the RIGHT ARROW key simultaneously,  then type the key to which
+you want to assign the string. Note that the key you pick must
+already have a string value (80-9F) assigned to it.
+
+A window will pop up at the bottom of the screen, in which you
+will edit. Type the string and type CONTROL, RIGHT SHIFT, RETURN
+to exit. For editing, you can use CONTROL, RIGHT SHIFT, RIGHT
+ARROW or LEFT ARROW to move right or left through the string and
+CONTROL RIGHT SHIFT + or - to insert or delete a character
+respectively.
+
+
+Editing the Hexadecimal Value of a Key   
+
+To assign a single hex value, type CONTROL,RIGHT SHIFT and LEFT
+ARROW key simultaneously.  Type the key you want to modify. A
+window will pop up at the bottom of the screen showing the
+current hex value, per the current mode (unshifted, shifted, CAPS
+LOCK or control). Enter the new hex value. NOTE that any illegal
+key will abort the edit without modifying the key.
+
+
+Keys Initiating Special Functions
+
+The key labelled NO SCROLL executes a PAUSE function. To resume
+execution, press NO SCROLL again (for AUG or DEC version only) or
+RETURN (for MAY version only).  This has the same effect as
+typing control-s for pausing to read screen dumps. The control
+value of the NO SCROLL key toggles between two modes (on/off) of
+automatically tracking the CP/M screen on a 40 column monitor.
+
+The right and left arrows at the top of the keyboard initiate the
+special functions screen right and screen left respectively (40
+column screen tracking) as their unshifted, shifted and CAPS LOCK
+values.
+
+The key labelled ENTER generates a Carriage Return as the
+unshifted, shifted and CAPS LOCK values.  The control value
+initiates the special function boot, which reboots the system.
+
+The key labelled RUN STOP is undefined as its unshifted, shifted
+and CAPS LOCK values, and toggles the display/nondisplay of the
+disk status line as its control value.
+
+
+CP/M 3 Command Format:
+
+     A>COMMAND {command tail} <cr>
+
+A CP/M 3 command line is composed of a command, an optional
+command tail, and a carriage return. The command is the name or
+filename of a program to be executed. The optional command tail
+can consist of a drive specification, one or more file
+specifications, and some options or parameters.
+
+          
+COMMAND CONVENTIONS
+
+The following special symbols define command syntax.
+
+     {}   surrounds an optional item.
+     |    separates alternative items in a command line.
+     <cr>      indicates a carriage return.
+     ^    indicates the Control Key.
+     n    substitute a number for n.
+     s    substitute a string (group) of characters for s.
+     o    substitute an option or option list for o.
+     []   type square brackets to enclose an option list.
+     ()   type parentheses to enclose a range of options within
+          an option list.
+     RW   Read-Write attribute - opposite of RO
+     RO   Read-Only attribute - opposite of RW
+     SYS  System attribute - opposite of DIR
+     DIR  Directory attribute - opposite of SYS
+      ...      preceding element can be repeated as many times as
+               desired.
+     *    wildcard: replaces all or part of a filename and/or
+          filetype.
+     ?         wildcard: replaces any single character in the
+               same position of a filename and/or filetype.
+
+
+
+ Control Character       Function
+
+ CTRL-A             moves cursor one character to the left. 
+
+ CTRL-B             moves cursor from beginning to end of command
+                    line and back without affecting command.
+ 
+ CTRL-C             stops executing program when entered at the
+                    system prompt or after CTRL-S.
+
+ CTRL-E             forces a physical carriage return without
+                    sending command. 
+
+ CTRL-F             moves cursor one character to the right. 
+
+ CTRL-G             deletes character at current cursor position
+                    if in the middle of a line. 
+
+ CTRL-H             delete character to the left of cursor.
+
+ CTRL-I             same as the TAB key.
+
+ CTRL-J             moves cursor to the left of the command line
+                    and sends command to CP/M. Line feed, has
+                    same effect as carriage return.
+
+ CTRL-K             deletes character at cursor and all
+                    characters to the right.
+
+ CTRL-M             same as carriage return.
+
+ CTRL-P             echoes console output to the list device.
+
+ CTRL-Q             restarts screen scrolling after a CTRL-S.
+
+ CTRL-R             retypes the characters to the left of the
+                    cursor on a new line; updates the command
+                    line buffer.
+
+ CTRL-S             stops screen scrolling.
+
+ CTRL-U             updates the command line buffer to contain
+                    the characters to the left of the cursor;
+                    deletes current line.
+
+ CTRL-W             recalls previous command line if current line
+                    is empty; otherwise moves cursor to end of
+                    line. CTRL-J,-M,-R,-U and RETURN update the
+                    command line buffer for recall with CTRL-W. 
+
+ CTRL-X             deletes all characters to the left of the
+                    cursor.
+
+
+Console Utilities:
+
+Redirection using GET
+
+ Syntax:
+
+GET {CONSOLE INPUT FROM} FILE filespec{[{ECHO|NO ECHO} | SYSTEM]}
+GET {CONSOLE INPUT FROM} CONSOLE
+
+GET directs the system to take console input from a file for the
+next system command or user program entered at the console.
+Console input is taken from a file until the program terminates.
+If the file is exhausted before program input is terminated, the
+program looks for subsequent input from the console. If the
+program terminates before exhausting all its input, the system
+reverts back to the console for console input.
+
+With the SYSTEM option, the system immediately goes to the
+specified file for console input. The system reverts to the
+console for input when it reaches the end of file. Re-direct the
+system to the console for console input with the:
+
+ GET CONSOLE INPUT FROM CONSOLE 
+
+command as a command line in the input file.
+
+Options
+
+ ECHO                 specifies that input is echoed to the
+                      console.  This is the default option.
+
+ NO ECHO         specifies that file input is not echoed to
+                 the console. The program output and the
+                 system prompts are not affected by this
+                 option and are still echoed to the console.
+
+ SYSTEM          specifies that all system input is
+                 immediately taken from the disk file
+                 specified in the command line. GET takes
+                 system and program input from the file until
+                 the file is exhausted or until GET reads a
+                 GET console command from the file.
+
+Examples
+
+ A>GET FILE XINPUT
+ A>MYPROG
+
+Tells the system to activate the GET utility. Since SYSTEM is not
+specified, the system reads the next input line from the console
+and  executes MYPROG.   If MYPROG program requires console input,
+it is taken from the file XINPUT. When MYPROG terminates, the
+system reverts back to the console for console input.
+
+ A>GET FILE XIN2 [SYSTEM]
+
+Immediately directs the system to get subsequent console input
+from file XIN2 because it includes the SYSTEM option. The system
+reverts back to the console for console input when it reaches the
+end of file in XIN2. Or XIN2 may redirect the system back to the
+console if it contains a GET CONSOLE command.
+
+ A>GET CONSOLE
+
+Tells the system to get console input from the console. This
+command may be used in a file (previously specified in a GET FILE
+command), which is already being read by the system for console
+input. It is used to re-direct the console input back to the
+console before the end-of-file is reached.
+
+
+Keyboard Redefinition with KEYFIG
+
+The purpose of the KEYFIG program is to allow you to alter the
+definition of almost ANY key on the keyboard. The only keys that
+you CANNOT modify are: the SHIFT keys, the SHIFT LOCK key, the
+CONTROL key, the 40/80 DISPLAY key and the COMMODORE key. At each
+step, options are presented in menu form. You can scroll through
+the options in the menus by using the up and down arrow keys at
+the top of the keyboard; pressing the return key selects the
+choice that is highlighted. 
+
+At almost any point, you can exit the program by typing 'CTRL c'
+(the CONTROL key and C simultaneously.)
+                   
+Selecting a Key to Edit
+
+To select a key for editing,  you must actually select the
+specific (1 of 4) value of the key that you want to modify. To do
+this, type the key so that the four values associated with it are
+displayed.  Use the up and down arrow keys to scroll through the
+four values; type the return key to select the value that is
+highlighted.  This is the specific key value that will be
+modified.  The next time you view this key the new value you
+assigned will be displayed. You can modify as many keys as you
+want. When you are done, select the fifth choice - "exit and save
+work file".  (NOTE: To view the up arrow, down arrow or return
+key, type the desired key and the control key simultaneously). 
+                 
+
+Setting Up Your Work File
+
+The first thing you will be asked to do is set up your work file.
+You will be given a choice of 3 sources from which you can do
+this:
+
+DEFAULT DEFINITIONS   which basically represent a standard set
+                      of key definitions.
+CURRENT DEFINITIONS   which represent the most recently loaded
+                      set of definitions. 
+DEFINITIONS ON BOOT DISK   which represent the set of definitions
+                           stored on your boot disk, normally
+                           default definitons, unless you replace
+                           them via this program.
+                
+
+What To Do With Your Work File 
+
+Once your work file is set up, you will be given a choice of 3
+things to do: 
+
+EDIT KEYS        which allows you to modify key definitions. 
+
+ASSIGN COLORS         which allows you to redefine the meaning
+                      associated with a particular color. 
+
+EXIT AND SAVE         This is provided here as a quick means of
+                      copying one set of definitions to another. 
+                      For example, loading the default definitions
+                      into your work file and saving them as the
+                      current definitions, provides a means of
+                      restoring your current definitions after
+                      running an application which may have used a
+                      now undesired set of key definitions.   
+Editing Keys
+
+Once you have selected a specific key value to edit, you will be
+given a choice of 5 ways of modifying the key:
+
+ASSIGN a new character     which allows you to do a 'one-for-one'
+                           replacement of the key.
+ASSIGN a STRING            which allows you to assign/edit a string
+                           (more than 1 character) to the key
+ASSIGN a COLOR             which allows you to assign an 80 or a 40
+                           column color
+ASSIGN special function    which allows you to assign a function
+                           from a list of currently available
+                           special functions.
+ASSIGN a HEX value         which allows you to replace the key
+                           value with a single hex value.
+
+                
+Assigning/Editing Color Values
+
+Once you have chosen to assign a color, you will be given a
+choice of 5 color types to assign: an 80 column foreground color,
+an 80 column background color, a 40 column foreground color, a 40
+column background color or a 40 column border color.  Scroll
+through and select the one you want to assign. At this point, a
+color map consisting of 16 boxes labelled 'a' through 'p' will be
+displayed.  Type the letter from the box representing the color
+that you want to assign.  (NOTE that one letter (usually 'a')
+will appear to be missing, because it blends with the background
+color - assume ALL boxes are lettered sequentially!)
+              
+
+Assigning/Editing Hexadecimal Values            
+
+Once you have chosen to assign a hex value to a key, you will be
+prompted for the value to assign.  Only charactersfrom 0-9 and a-
+f (upper or lower case) will be accepted.  As you type
+characters, the current value is shifted left one nibble and the
+new value is ORed into the lst nibble.  You can type as many
+characters as you want, but the last 2 you type will be the value
+assigned to the key.  Type return when you are finished. Note:
+The value you type when the four key values are displayed will
+not be displayed as hex, but as what the hex value represents.
+
+WARNING:    This mode should only be used by those familiar with
+            hexadecimal data.
+              
+
+Assigning/Editing Special Functions
+
+Once you have chosen to assign a special function you will be
+given a list of 16 currently available special functions. Scroll
+through the list and assign the function that you want this key
+to perform.
+            
+
+Assigning/Editing Strings
+
+Once you have chosen to assign a string, you will be given a list
+of 32 available strings (some of which may already be defined.)
+Scroll through and select the one you want to assign to this key. 
+At this point, the one you choose will be displayed near the top
+of the screen for editing. You can edit by typing keys and/or by
+choosing one of the menu options presented - insert a color,
+insert a hex value, insert a special function or a second string
+(warning - the remainder of the string will be deleted if you
+insert a second string.) You can also use the left and right
+arrow keys and the insert and delete keys.   When you are done,
+select the menu choice "exit string edit and save assigned
+string".
+               
+
+Finishing Up-Saving Your Work File
+
+Once you have loaded your workfile and completed any editing you
+wanted to do, you will be given three choices as to what to do
+with your work file:
+ 
+SAVE AS CURRENT       which makes the definitions in your work file
+                      effective immediately upon exiting this
+                      program
+SAVE ON CP/M DISK     which will cause the definitions in your
+                      work file to be loaded the next time you
+                      boot from the disk to which it was saved
+DON'T SAVE       a means of exiting if you made a mistake
+                 or changed your mind. 
+                     
+
+
+
+
+Redirect Console Output with PUT
+
+ Syntax:
+
+    PUT CONSOLE {OUTPUT TO} FILE filespec {option} | CONSOLE
+    PUT PRINTER {OUTPUT TO} FILE filespec {option} | PRINTER
+    PUT CONSOLE {OUTPUT TO} CONSOLE
+    PUT PRINTER {OUTPUT TO} PRINTER
+
+
+PUT puts console or printer output to a file for the next command
+entered at the console, until the program terminates. Then
+console output reverts to the console. Printer output is directed 
+to a file until the program terminates. Then printer output is
+put back to the printer.
+
+PUT with the SYSTEM option directs all subsequent console/printer
+output to the specified file. This option terminates when you
+enter the PUT CONSOLE or  PUT PRINTER command.
+
+ Options
+
+         [ {ECHO | NO ECHO} {FILTER | NO FILTER} | {SYSTEM} ]
+
+ ECHO            specifies that output is echoed to the
+                 console. This is the default option when you
+                 direct console output to a file.
+
+ NO ECHO         specifies that file output is not echoed to
+                 the console. NO ECHO is the default for the
+                 PUT PRINTER command.
+
+ FILTER          specifies filtering of control characters,
+                 which means that control characters are
+                 translated to printable characters.  For
+                 example, an  ESCape character is translated
+                 to ^[.
+
+ NO FILTER            means  that  PUT does not translate control
+                      characters. This is the default option.
+
+ SYSTEM          specifies that system output as well as
+                 program output is written to  the  file
+                 specified by filespec. Output is written to
+                 the file until a subsequent  PUT CONSOLE
+                 command redirects console output back to the
+                 console.
+
+ Examples
+
+ A>PUT CONSOLE OUTPUT TO FILE XOUT [ECHO]
+
+Directs console output to file XOUT with the output echoed to the
+console.
+
+ A>PUT PRINTER OUTPUT TO FILE XOUT
+ A>MYPROG
+
+Directs the printer output of program MYPROG to file XOUT. The
+output is not echoed to the printer.
+
+ A>PUT PRINTER OUTPUT TO FILE XOUT2 [ECHO,SYSTEM]
+
+Directs all printer output to file XOUT2 as well as to the
+printer (with ECHO option), and the PUT is in effect until you
+enter a PUT PRINTER OUTPUT TO PRINTER command.
+
+ A>PUT CONSOLE OUTPUT TO CONSOLE
+
+Directs console output back to the console.
+
+ A>PUT PRINTER OUTPUT TO PRINTER
+
+Directs printer output back to the printer.
+
+
+
+Displaying a File with TYPE
+
+ Syntax:
+
+       TYPE {filespec {[ PAGE | NOPAGE ]}}
+
+
+The TYPE command  displays  the  contents  of  an   ASCII
+character file on your screen.
+
+ [PAGE]          Causes the console listing to be displayed in
+                 paged mode;  i.e., stop automatically after
+                 listing n lines of text, where n normally
+                 defaults to 24 lines per page.
+
+ [NOPAGE]        Turns off Console Page Mode and continuously
+                 displays a typed file on the screen.
+
+
+
+TERMINAL EMULATION PROTOCOLS
+
+ADM31 Mode
+
+ADM31 mode is the default terminal mode for all versions of C-128
+CP/M. In fact, it is the only mode available for the AUG and DEC
+versions. (The MAY version also supports VT-100, if you re-
+assemble the system files from scratch with the VT-100 option
+enabled). The control codes for ADM31 mode and its various sub
+modes are outlined below. The ^ means hold down <control> key.
+Escape (ESC) sequences are activated by printing the character
+sequence to the console.
+
+ADM3A
+
+Code                  Action
+ESC = row col         set cursor position
+ESC ESC ESC color     set color      (added for C128 CP/M)
+^H                    cursor left
+^L                    cursor right
+^J                    cursor down
+^K                    cursor up
+^Z                    home and clear screen
+^M                    carrage return
+^G                    bell
+
+
+ADM31
+
+ESC = R C             set cursor position      
+                 (R = row + $20, C = column + $20, Home = 0,0)
+ESC ESC ESC color     set color           (added for C128 CP/M)
+ESC T            clear to end of line
+ESC t            clear to end of line
+ESC Y            clear to end of screen
+ESC y            clear to end of screen
+ESC :            home & clear screen
+ESC *            home & clear screen
+ESC )            Half intensity on
+ESC (            Half intensity off
+ESC G 4               Reverse video on
+ESC G 2               Blinking on
+ESC G 1               select 80 col alternate character set
+ESC G 0               Rev. video and blinking off, restore normal
+                      80 col char set
+ESC E            Insert line
+ESC Q            Insert Character
+ESC R            Delete Line
+ESC W            Delete Character
+^H                    cursor left
+^L                    cursor right
+^J                    cursor down
+^K                    cursor up
+^Z                    home and clear screen
+^M                    carriage return
+^G                    bell
+
+
+KAPRO II Terminal control sequences
+
+^H                    cursor left (bs)
+^L                    cursor right
+^J                    cursor down
+^K                    cursor up
+^^                    home cursor
+^Z                    home cursor & clear screen
+^M                    carriage return
+
+ESC = R C             set cursor position 
+                 (R and C = row + $20 and column + $20)
+ESC E            Line Insert
+ESC R            Line Delete
+^X                    Clear to End of Line
+^W                    Clear to End of Screen
+
+
+ESC B <num>      turn attrubute on
+ESC C <num>      turn attrubute off
+
+                 where <num> is defined as:
+                 0=   reverse video
+                 1=   <half intensity>
+                 2=   <blink>
+                 3=   <underline>
+
+
+VT 100 
+
+^G                    bell
+^H                    back space. stop at left margin
+^I                    TAB
+^J                    do line feed scroll at bottom
+^K                    same as line feed
+^L                    same as line feed
+^M                    do CR
+ESC                   start control seq
+  ESC =               Keypad mode
+  ESC >               Keypad mode
+  ESC 7               Save current cursor post and char set
+  ESC 8               Restore cursor position and char set
+  ESC D               move cursor down one line
+  ESC E               move cursor to start of next line
+  ESC H               set horizontal tab
+  ESC M               move cursor up one line
+  ESC Z               same as ESC [ Pn c
+  ESC c               reset
+  ESC # 3             Double height line Top
+  ESC # 4             Double height line Bottom
+  ESC # 5             set single width line
+  ESC # 6             Double width line
+  ESC # 8             files screen with E's
+  ESC [ Pn A          cursor up
+  ESC [ Pn B          cursor down
+  ESC [ Pn C          cursor right
+  ESC [ Pn D          cursor left
+  ESC [ Pn ; Pn H     cursor positioning
+  ESC [ Ps J          erase display
+  ESC [ Ps K          erase line
+  ESC [ Pn c          device attributes request
+  ESC [ Pn ; Pn f     cursor positioning
+  ESC [ Ps g          clear tab stop(s)
+  ESC [ Ps;..;Ps h    set mode
+  ESC [ Ps;..;Ps l    reset attributes
+  ESC [ Ps;..;Ps m    set attributes
+  ESC [ Ps n          Device status report
+  ESC [ Ps q          set LED's
+  ESC [ Pn ; Pn r     Set Top and Bottom Margins
+  ESC [ 2 ; Ps y      invoke confidence test
+  ESC [ x             Report / Req parameters
+  ESC ( A             select char set
+  ESC ( B             select char set
+  ESC ( 0             select char set
+  ESC ( 1             select char set
+  ESC ( 2             select char set
+  ESC ) A             select char set
+  ESC ) B             select char set
+  ESC ) 0             select char set
+  ESC ) 1             select char set
+  ESC ) 2             select char set
+
+ 

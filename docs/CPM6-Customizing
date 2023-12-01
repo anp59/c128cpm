@@ -1,0 +1,1069 @@
+CPM6.TXT rev 1a 96-11-01
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+      THIS DOCUMENT IS COPYRIGHT (C) 1988, 1996 BY HERNE DATA
+      SYSTEMS LTD.  THE MATERIAL CONTAINED HEREIN MAY BE FREELY
+      USED FOR PERSONAL INFORMATION ONLY.  IF YOU REPRODUCE IT,
+      THIS COPYRIGHT NOTICE MUST NOT BE REMOVED.  THIS MATERIAL
+      MAY NOT BE EXPLOITED FOR COMMERCIAL PURPOSES.
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+Herne Data Systems Ltd., 
+PO Box 250, Tiverton, ON N0G 2T0 CANADA.  
+Voice/fax 519-366-2732, 
+e-mail herne@herne.com
+internet: http://www.herne.com
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Customizing C-128 CP/M
+======================
+
+
+This document deals with a number of fairly simple, but quite
+useful modifications, or patches, that can be made to the CP/M
+system programs.  (Note that it is fully recognized that the best
+way to customize the CP/M system is to modify the source code and
+re-assemble it.  However, this is not always possible or in some
+case, desirable.   If you wish to make these changes to the
+source code, by all means do so.  But remember: you may end up
+with a system which has a non-standard memory map that may not
+work with some other customizing routines or operating system
+extensions.)
+ 
+Before we get started, a bit of background info may be useful. 
+Officially, there are four versions of the CP/M boot program
+"CPM+.SYS" generally available for the C-128.  These can be
+identified by the dates displayed when the CP/M system first
+boots up:  1 AUG 85, 6 DEC 85, 8 DEC 85 and 28 MAY 87.  The 1 AUG
+85 version did not support either the RS-232 port or the
+1700/1750 RAM expander.  (It will be referred to as the 'AUG'
+version).   Support for these were added with the 6 DEC 85
+version.  A minor bug in the printer routine was corrected with
+the 8 DEC 85 release (these will both be referred to as the 'DEC'
+version because the patching points used in this document are
+identical for both versions.); and full support was added for the
+1581 drive with the 28 MAY 87 version (referred to as the MAY
+version).  A fifth version, dubbed MAY-VT, can be created by re-
+assembling the MAY system files with the VT-100 emulation option
+enabled.  This procedure is detailed later under the heading
+'Adding VT-100 Support'.  
+
+There are also numerous modified "unofficial", customized and
+beta test versions in limited circulation.  This document deals
+only the four official versions, although the experienced
+programmer can easily adapt the techniques explained herein to
+other versions.
+
+Although the procedure is fairly straight forward, I will assume
+that the reader has a certain degree of understanding and
+familiarity with the CP/M environment.  Specifically, extensive
+use is made of the CP/M debugging utility "SID.COM".  (Of note to
+long time C-64 users is that this program has nothing to do with
+the sound chip of the same name.  In this case SID is short for
+"Symbolic Instruction De-bugger".)
+  
+
+Note:       The addresses given in this document for the patch
+            points refer to those obtained using SID or an
+            equivalent file debugger which loads the file being
+            patched into the normal transient program area (TPA)
+            memory space.  Consequently, all addresses are
+            calculated based on the beginning of the file being at
+            address hex $100 (i.e. the normal start of the TPA). 
+            If you are using a hex file editor which calculates its
+            addresses based on the beginning of the file being
+            address 0, you must subtract hex $100 from the
+            addresses given here in all cases to get the patch
+            point for these other programs.   For example, address
+            $440 with SID, is actually offset $340 when you count
+            it from the beginning of the file.  ($340 from the
+            start of the TPA at $100 = $440)
+
+
+CPM+.SYS
+
+STARTING OFF
+
+The first step in customizing your CP/M system is to boot up CP/M
+and enter the SID environment.    With a copy of SID.COM on the
+same disk as your CPM+.SYS file, type in:
+
+   SID CPM+.SYS   <return>
+
+
+NOTE:       USE A BACKUP WORK DISK. DO NOT DO THIS WITH YOUR
+            ORIGINAL SYSTEM DISK BECAUSE IT WILL MAKE PERMANENT
+            CHANGES TO THE OPERATING SYSTEM WHICH YOU MAY WISH TO
+            CHANGE LATER.
+
+
+
+After a few moments, the screen should display something like:
+
+   CP/M 3 SID - Version x.x
+   NEXT  MSZE   PC    END
+   zzzz  zzzz  0100  CEFF
+   #
+
+where zzzz is a hexadecimal number indicating the length of the
+CPM+.SYS file.  For the AUG version, it will have a value of
+5D00; a value of 6400 for the DEC versions; a value of 6300 for
+the MAY version; and a value of 6500 for the MAY-VT version.  If
+one of these numbers does not show up, then procede with caution
+because you may not be working with an "official" release and
+some or all of the patch points may be different.  In any case,
+mark this number down because it will be neede at the end when
+you save your changes.  The # is SID's normal input prompt:  it
+is now awaiting your further instructions.
+
+Throughout the remainder of this document, I will be referring to
+three main SID commands.  These are "d" for display memory; "s"
+for set memory (i.e. change memory bytes); and "w" for write
+memory to file.  The syntax for each of these commands is
+explained in documents dealing with standard CP/M utilities and
+is summarized below.   Note that there is no space between the
+command letter and the first argument, but a space (or comma, as
+applicable) is required between arguments.
+
+   d<start address>,<end address>
+ 
+   s<start address>
+
+   w<file spec>,<start address>,<end address>
+
+In all cases, <start address> and <end address> are expressed as
+hexadecimal values and both addresses are optional.  If <start
+address> is omitted with the "d" command, the display starts at
+the current program counter value (default start at 0100, and
+with subsequent uses, it resumes from where it last left off),
+while if <end address> is omitted, the next 192 bytes will be
+displayed (12 lines of 16 bytes).  If <start address> and <end
+address> are omitted with the "w" command, the values displayed
+in SID's signon message under PC and NEXT are used as the <start
+address> and <end address> respectively.  For safety sake, it is
+a good idea to specify the addresses explicitly when modifying
+bytes with the "s" command or writing the modified file with "w". 
+That way you do not have to keep track of the default values from
+the program counter.  With SID, the parameters can be separated
+by either spaces or commas.
+
+
+
+SCREEN COLORS
+
+As part of the start-up routine, C-128 CP/M specifies the screen
+colors for the foreground (characters), background and 40 column
+border area.  Now, you must admit that not everyone will like the
+purple characters on a black background with a brown border that
+the wise folks at Commodore chose as the defaults.  Our first
+task is to change them into something a bit more palatable.
+
+On examining the CP/M source code, one finds that the start-up
+routine specifies logical color 0 for the background, logical
+color 4 for the foreground (i.e. the characters) and logical
+color 9 for the 40 column border area.  Armed with this
+knowledge, there are two ways to change the defaults: change the
+logical to physical color translation table or change the logical
+color codes in the start-up routine.  You need only make one of
+the following set of changes, take your pick.
+
+The first method is perhaps the easiest, and is a good
+introduction to the workings of SID.  In all official versions of
+C-128 CP/M, the logical to physical color translation table is in
+the same spot.  Type in the following at the SID prompt "#":
+
+      d5f0
+
+followed by the <return> key.  (From this point on, whenever I
+say to type in something, you should always press the <return>
+key afterwards.)
+
+You should see a display similar to:
+
+05F0: 00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF .."3DUfw........
+
+followed by a number of other lines of similar format.  This
+first line is the logical to physical color translation table. 
+(If you have previously re-defined your colors using the
+KEYFIG.COM utility, all of the numbers may not appear exactly as
+shown.)   Memory location 05f0 contains the physical colors
+corresponding to logical color 0 for the 80 and 40 column
+displays (they can be different, if you so desire), while 05ff
+contains the physical colors for logical color f.  In each byte,
+the low nibble, -x, contains the physical color for the 80 column
+screen, while the high nibble, x-, has the color for the 40
+column screen.  Initially, all logical colors are defaulted to
+the corresponding physical color numbers, hence the 00 11 22 33
+etc.  
+
+Recall that logical color 0 is specified for the background.  To
+change this, type in:
+
+    s5f0
+
+      SID will respond with:
+
+    05F0  00 __
+
+In this case, 00 is the current value for memory location 5f0 and
+__ is the location of the cursor.  Type in your new hex value,
+say 06.  (This will give a black background on the 40 col screen
+and a blue one on the 80 col screen.)   The physical color
+nibbles can be obtained from the following table (note the
+differnces between 40 column and 80 column modes):
+
+                  Nibble Value        Color
+
+                        0              Black
+                        1              White
+                        2              Red
+                        3              Cyan     (light cyan 80 col)
+                        4              Purple   (light purple 80 col)
+                        5              Green
+                        6              Blue
+                        7              Yellow   (light yellow 80 col)
+                        8              Orange   (dark purple 80 col)
+                        9              Brown    (dark yellow 80 col)
+                        a              light red
+                        b              dark gray (dark cyan 80 col)
+                        c              medium gray
+                        d              light green
+                        e              light blue
+                        f              light gray
+              --------------------------------------------------
+
+
+SID will respond with:
+
+    05F1  11 __
+
+which is the next memory location to patch.  We will not make any
+changes here for now, so press <return> a few times until SID
+says:
+
+    05F4  44 __
+
+This is the foreground or character color location.  Type in the
+new value, say 11, for white characters or 55 for green (like a
+green screen monitor).  Press <return> a few more times until you
+get:
+
+    05F9  99 __
+
+This is the final color location to patch.  It can be ignored if
+you use an 80 column display because the border color is only
+used in 40 column mode.  It is generally most appealing to set
+this one to either the same color as the background or a
+different shade of the same color (such as light blue with dark
+blue, light red with dark red, etc.) 
+
+After you have completed the changes, type in a period (".") to
+exit the "s" command and return to the main SID input prompt (#).
+
+(Note that it is also possible to patch this color table using
+the C-128 keyboard redefinition utility KEYFIG.COM.  Bear in mind
+that the logical colors to be changed to set the default screen
+colors are the same as those outlined above.)
+
+
+The second patch method for changing the screen colors may seem a
+bit more complex to some because the precise location to modify
+depends upon the version of CP/M that you are modifying.  However
+the technique is virtually identical to that outlined above.  The
+colors are actually set just before the sign-on message by using
+a series of escape codes printed to the screen according to the
+following extract from the source code:
+
+call prt$msg            ; call the routine to print signon message
+
+db "Z"-"@"              ; control-Z to clear screen 
+                        (note this screen clear is not really
+                        required)
+
+db esc,esc,esc          ; prefix for setting color
+db purple+$50           ; logical color 4 for foreground
+
+db esc,esc,esc
+db black+$60            ; logical color 0 for background
+
+db esc,esc,esc
+db brown+$70            ; logical color 9 for border
+
+db "Z"-"@"              ; clear screen          (this is the one which is
+                                                required)
+
+db "CP/M 3.0 On the Commodore 128"  ; sign on message
+
+db date
+db cr,lf
+db "                 "       ; filler
+db 0                         ; end of message
+
+(program resumes execution here)
+
+
+Note that the three colors need not be specified in any given
+order.  They may also be specified as physical colors rather than
+logical ones.  The patch locations are as follows:
+
+Color Code                        Location
+                        AUG   DEC   MAY   MAY-VT
+Foreground              28d7  2ffb  2e01  3001
+Background              28db  2fff  2e05  3005
+40 col border           28df  2f03  2e09  3009
+
+All three locations are interchangeable because the color source
+which is actually set by a given location depends only on the
+value of byte.  To set a given location as a logical foreground
+color, add $50 to the color table numbers given above.  To
+specify the location as a logical background color add $60 and
+for the 40 column border color add $70.  For example, if you wish
+to specify the foreground as logical color 1, the background as
+logical color 7 and the border as logical color 3, the byte
+values would be $51, $67 and $73.
+
+If you prefer to specify the colors as physical colors (i.e. the
+logical to physical color translation table is bypassed and the
+specified value is used directly as the color),  the
+corresponding adders are $20 for the foreground, $30 for the
+background and $40 for the border.  For example, if you used
+values of $21, $32, $46 you would always have white characters on
+a red background with a blue 40 column border, regardless of how
+you had defined your logical colors.
+
+Use SID's "s" command to set the appropriate locations to your
+desired new values.   (Don't forget to type in a period when you
+are done to return to the main SID prompt.)   It may appear that
+the locations given for the DEC version are out of sequence.  I
+assure you, however, that they are in correct sequence.  The
+illusion is created by the obscure method in which most of the
+CPM+.SYS file is stored on disk.  It is stored in 128 byte
+records in reverse order (i.e. the first record after the file
+header is placed into the high end of the computer's memory and
+procedes downwards).  This creates apparent discontinuities in
+parts of the file which happen to cross over one of the 128 byte
+record boundaries.  As we shall see in the next example, this can
+also create some minor confusion when trying to patch across a
+split record.
+
+
+THE SIGN-ON MESSAGE
+
+As listed above in the excerpt from the CP/M source code, a sign-
+on message is included for displaying on the screen when CP/M
+first boots up.  In its default form, this is a very boring
+message consisting of "CP/M 3.0 ..." etc. followed by the date. 
+Being in the mood for customization, we can change this to
+anything that we like, up to about 50 bytes total length. 
+Wouldn't it be more interesting for your computer to display a
+personal greeting each time you started it up?  How about "Good
+morning Fred, this is HAL speaking"?  Or "Don't bother me now,
+I'm thinking"?
+
+The patching procedures for the DEC, MAY  and MAY-VT versions are
+simple and straight forward.  With the DEC version, you have 53
+bytes to play with at addresses 2f05 to 2f39.  (Not including an
+initial <control>-Z ($1a) at 2f04, to clear the screen before
+printing the message.)  With the MAY version, you have 54 bytes
+from 2e0b to 2e40, with the clear-screen at 2e0a.  With the MAY-
+VT version, the 54 bytes are at 300b to 3040 and the clear screen
+is at 300a.  
+
+Your custom message can be created by using a variation of SID's
+"s" command.  Type in:
+
+      s<start address> 
+
+where <start address> is the previously mentioned value for the
+CP/M version you are using.  SID will respond with something
+like:
+
+         2F05 43 __
+
+and will await your input.  Instead of typing in a single hex
+value as before, you can type in your desired ASCII string,
+preceded by a quote:
+
+                "Fred's computer.  Good morning...
+
+and followed by a <return>.  Note that you do not use a trailing
+quote.  Anything entered after the first quote is interpretted as
+part of the string.  Using a trailing quote will cause this quote
+mark to be included in your message.  In addition, you should not
+use trailing spaces unless you want them to be included in your
+message.  SID will display the next available memory location
+after your change followed by the current value of this location
+and the input cursor.  Type in a period and <return> if you are
+done or more text if you are not.  
+
+You can include linefeeds (hex $0a), <return>s (hex $0d), as well
+as other cursor and screen control escape codes in your message.  
+These are easiest to enter with the normal "s" command outlined
+above for changing the hex value of individual bytes.  (When
+doing the above patch, you should use the "d" command frequently
+to keep track of where you stand so you do not over-run the
+available area.  You may even want to get a printed copy of the
+display of the area in question, using <control>-p then d<start
+address> to use as a reference for repairing the damage should
+you over-run.)
+
+When you have finished your custom message, check your overall
+work with the "d" command to see how much padding you should add:
+
+      d2f05           (or d2e0b for the MAY version)
+
+Your message should be padded out with a series of blanks ($20
+byte values) or hex 0's until you reach  (but not including)
+$2f3a (DEC version),  $2e41 (MAY version) or $3041 (MAY-VT
+version), at which point you should have a hex 0 byte.  This 0
+byte is very important as it serves as an end of message marker. 
+The print_message routine that was called at the start of the
+sign-on will resume at the address immediately following this
+byte.  Misplacement of the zero byte terminator may cause a
+system crash.  Padding with hex 0's is acceptable because 0 is
+the Z-80 machine language NOP instruction, which does nothing but
+go on to the next instruction. 
+
+Unfortunately, the sign-on message for the AUG  version is split
+across a record boundary.  The first half of the message consists
+of 31 bytes located at $28e1 to $28ff and the second half is 24
+bytes long at $2800 to $2817.   The initial clear-screen is at
+$28e0 and the 0 byte message terminator is at $2818.  It is
+especially important in this case to keep track of your byte
+count when entering the new message becuse if you over shoot the
+available space, you will corrupt your system disk.
+
+
+
+THE RUN/STOP KEY
+
+Most people who are familiar with the operation of the C-128 in
+native mode (and for that matter, most other Commodore 8-bit
+computers) use the <RUN/STOP> key as sort of a "soft" reset
+button to halt the execution of a BASIC, or even a machine
+language program.  However, you may have also discovered that
+this does not work in CP/M mode.  (How often have you been in
+CP/M mode trying to abort a program and pressed <RUN/STOP> out of
+habit?)   The equivalent general program exit command and soft
+reset in CP/M is <control>-C.  (That is, hold down the control
+key and press the letter C key at the same time.)
+
+This next patch modifies the keyboard decoding tables to assign a
+value of <control>-C (hex $03) to the <RUN/STOP> key.  The patch
+point is the same for all versions of C-128 CP/M: $058c.  Change
+the byte at this location from 0 (representing the equivalent of
+no action) to 3 (representing a <control>-C).  That's all there
+is to this patch.   Now when you press <RUN/STOP> in CP/M mode,
+it will be the same as pressing <control>-C to exit a program.
+
+
+
+THE RAM-DISK
+
+The AUG CP/M version does not support the RAM disk, so it will
+not be discussed further for this topic.  
+
+
+A) The disk label
+
+CP/M has a convenient method of assigning a name (or volume
+label) to a given disk to help you keep track of which disk is
+which.  (This is similar to the convention of naming a Commodore
+DOS disk during formatting, except that it can be done at any
+time.)   The name is assigned using the CP/M SET.COM utility.
+ 
+The label is recorded as a special entry in the disk directory
+which is normally invisible.  (You cannot see the volume label
+when you do a DIR command for the disk directory.)  Certain
+operating system extensions make use of the directory label as a
+way of telling which disk is currently in your drive.  It can
+also be a simple method of "personalizing" your disks.  A full
+description on disk labels is given in the separate document "The
+Disk System".
+
+So far so good, or at least one would think so.  But, and here
+comes the cruncher, you should be wary of assigning a name to
+your RAM disk (drive M:).  The reason for this is quite simple:
+it already has a name which is also used as a flag to control
+formatting of the RAM disk on a system boot!
+
+When CP/M boots up, it checks for the presence of the RAM disk by
+looking for the RAM expansion controller (REC) registers.  If it
+finds the REC to be present, it then checks the first entry of
+the RAM disk directory for a "key" to see if the RAM expander has
+been initialized as a CP/M RAM disk.  This key is the disk label
+$20 + "ERTWINE VON" + 1.  (Von Ertwine was the chap responsible
+for adapting CP/M to run on the C-128.)  If this label is not
+found, the boot process will "format" the RAM disk by erasing the
+directory area with hex $e5's then writing this label to the
+first entry, thus losing any data which may be present already.
+
+There are a number of reasons why you may want to preserve data
+when switching modes or re-booting your system.  The most obvious
+is to recover from a system crash.  If you had created or edited
+files on the RAM disk without saving them to a floppy and then
+subsequently had a crash or lock-up, you may want to be able to
+recover the files when you re-boot.  Normally, everything in the
+RAM disk would be preserved providing you did a re-boot by
+pressing the reset button momentarily.  However, if you re-name
+your RAM disk using SET, the key will no longer be present and
+your data will not be preserved when going from CP/M to C-128
+mode and then back again.  
+
+The DEC and MAY-VT  versions are relatively simple to patch.  The
+MAY version is a bit more difficult, again due to the patch area
+being split across a record boundary.   For the DEC version, the
+label is located at $1e5a to 1e64.  To see it type in:
+
+      d1e59
+
+The text "ERTWINE VON" should be shown on the first line of the
+dump.  The first character is a hex $20 (ASCII space) which
+indicates that the entry is a directory label.  The last byte is
+a 01 which indicates that a label entry is present in the
+directory.  Neither of these should be changed.  Use SID's "s"
+command to change the text of the label:
+
+      s1e5a 
+
+      SID should respond with:
+
+      1E5A 45 __
+
+To make the changes, type in your new disk label as a text entry
+preceded by a quote such as:
+
+            "MIKES DISK
+
+You must include the quote mark at the beginning.  You have
+eleven characters to play with and they should be in the form of
+a legal CP/M filename (i.e. all uppercase with no reserved or
+special symbols such as ? or *).  Unused locations should be
+padded with spaces.  When you have pressed <return>, SID will
+display the next memory area, which might be:
+
+      1E65 01
+
+Type in a period (.) followed by <return> to signify that you are
+finished.  You can check your handy work by typing in d1e59
+again. 
+
+For the MAY-VT version, the label is at 1c2e to 1c38, not
+including the leading $20 and trailing 01.   It can be changed
+using the same method as outlined above for the DEC version, but
+using the new address.
+
+Now for the MAY version.  The first 3 characters of the label
+(ERT) are at $1cfd to 1cff, while the remainder (WINE VON) are at
+$1c00 to 1c07.  To see this, type in:
+
+d1c00 1cff 
+
+To change the label, you will have to change the memory bytes in
+both locations, bearing in mind the number of bytes used at each
+location.  This can be done in two steps:
+
+First,      use s1cfd to change the first three bytes in the label
+            at $1cfd to 1cff.  Remember to type in a period when
+            you have changed these three bytes to return to the SID
+            command prompt.
+
+Second      use s1c00 to change the remainder of the bytes at $1c00
+            to 1c07.
+
+
+B) The drive code
+
+C-128 CP/M automatically assigns the RAM disk to drive M:.  While
+this is good for most applications, there are a few CP/M programs
+(mostly those designed to work under much older versions of CP/M)
+which will not accept anything over D: (such as M:) as a legal
+drive specifier.  In this case, you must change the RAM disk
+assignment to some other letter, such as B:, C:, or D: (assuming
+that you do not have a disk drive already so assigned).  Changing
+the drive assignment invloves making a few patches to the DRVTBL
+and optionally to the code which checks for and initializes the
+RAM disk.  First the DRVTBL.
+
+For the DEC, MAY and MAY-VT versions, the DRVTBL is located
+starting at $651.  It contains a set of 16 bit vectors, one for
+each drive letter, to the disk parameter block for each of the
+drives.  (If no drive is assigned to a given letter, the vector
+has a value of 0 0.)  The first thing we must do is to "de-
+allocate" drive M:.  This can be done by setting both locations
+$669 and 66a to 0.  The second step is to allocate another drive
+letter to the RAM disk.  The vector to the RAM disk DPB is $fb96. 
+Translated to low byte/high byte format, this becomes $96 and
+$fb.  The correct addresses to patch depend on the desired drive
+code according to the following table:
+
+Drive code        location for      Drive code        location for
+                  96    fb                            96    fb
+
+    A: *          651   652               B:          653   654
+    C:            655   656               D:          657   658
+    E: *          659   65a               F:          65b   65c
+    G:            65d   65e               H:          65f   660
+    I:            661   662               J:          663   664
+    K:            665   666               L:          667   668
+    M:            669   66a               N:          66b   66c
+    O:            66d   66e               P:          66f   670
+
+* note:     you should avoid assigning drives A: and E: to the RAM
+            disk because this may cause problems with other CP/M
+            system functions.
+
+When CP/M boots up it checks for the presence of the RAM disk. 
+If it is not found, the corresponding vector in the DRVTBL is
+removed and replaced with 0 0.  This process assumes that the RAM
+disk is assigned to drive M:.  Since we have just changed this
+assignment, it is desirable to change the vector address which
+will be updated.  Note that this patch is not essential, but will
+ensure that you will not be able to access the RAM disk drive
+code if you do not have a RAM disk installed.   With the DEC 
+version the patch address is $1e10; with the MAY version, it is
+$1cb3; and with the MAY-VT version it is 1ce4.  In all cases, the
+contents of this byte will normally be $e9 representing the
+pointer into the DRVTBL for drive M:.  This byte should be
+changed to a value from the following table which corresponds to
+the drive letter installed above:
+
+Drive       value       Drive       value       Drive       value
+
+    A:      d1              B:      d3              C:      d5
+    D:      d7              E:      d9              F:      db
+    G:      dd              H:      df              I:      e1
+    J:      e3              K:      e5              L:      e7  
+    M:      e9              N:      eb              O:      ed
+    P:      ef
+
+
+
+THE DEFAULT PRINTER
+
+When CP/M boots up, the CP/M logical LIST device (i.e. the
+printer) is assigned to the physical device PRT1 (i.e. serial
+port printer with device #4).  You may wish to use another
+printer device, such as device 5, or even an RS-232 port device
+as the default printer.  (I have two separate monitors hooked to
+my system: one for the 40 col screen, and the other for the 80. 
+In some cases, I use the 40 column screen as a temporary
+"printer".)  The patch address to change for the default printer
+assignment is $28c4 for the AUG version, $2fe8 for the DEC
+version,  $2eee for the MAY version, and $30ee for the MAY-VT
+version.  Normally, this byte will have a value of $10 which
+corresponds to the value of PRT1 from the following table:
+
+Printer device          Byte value
+
+  80COL (screen)              $40
+  40COL (screen)              $20
+  PRT1  (device 4)            $10
+  PRT2  (device 5)            $08
+  RS-232                      $02   (DEC,  MAY  and MAY-VT  versions
+                                    only)
+
+
+Multiple device assignments are also possible.  For example, a
+value of $18 ($10 + $08) will assign the printer to both devices
+4 and 5.  In the case of the RS-232 port, some fiddling with the
+serial protocol of the printer may be required to match the
+default baud rate and communication protocol of the C-128's RS-
+232 port.
+
+
+
+
+THE DRIVE SEARCH CHAIN
+
+When CP/M is looking for a program, it can search up to four
+separate drives before it gives up its search and reports the
+equivalent of a "file not found error".  This sequence is called
+the "drive search chain".  In the DEC, MAY and MAY-VT  versions,
+the drive search chain parameters are located at $1268 to 126b,
+while for the AUG  version, the search chain is at $0e68 to 0e6b. 
+In all cases, the default version of CP/M contains the chain: 00
+ff ff ff  which corresponds to searching the currently logged
+drive only.
+
+To set the search chain, the following byte values are used:
+
+00 = default or currently logged drive
+01 = drive A:
+02 = drive B: 
+(... etc)
+10 = drive P:
+ff = filler
+
+For example, if the search chain was set to:
+
+      00 0d 01 02
+
+and you typed in a transient command such as PIP, CP/M would
+search the default drive for the corresponding file (PIP.COM). 
+If it was not found on this drive, CP/M would then try drive M:. 
+If it was still not found, drive A: would be tried next, then
+drive B:.  If it was still not found after the complete search,
+CP/M would report back with a file not found error.  If one of
+those drives was also the default, it would not be searched
+again.
+
+
+
+THE DEFAULT DRIVE AND USER AREA
+
+After CP/M boots up, control is passed to the user via the
+Console Command Processor (CCP.COM) which awaits for your
+command.  The CCP prompt takes the form of "{user number}{drive
+letter}>" (such as 3M>), where {user number} and {drive letter}
+represent the "currently logged" user area (3 in this case) and
+disk drive (M: in this case).  When you first boot up, this is
+normally set to user area 0 on drive A:, giving the familiar "A>"
+prompt.  In some cases, such as when you use one disk drive to
+boot from, but store most of your programs on a different drive,
+you may wish to change this default setting to avoid having to
+change the drive assignment explicitly each time you boot up.  
+
+The default drive on a cold boot is controlled by the byte at
+$122f for the DEC, MAY and MAY-VT versions and at $0e2f for the
+AUG  version.  The value of this byte is 0 for drive A:, 1 for
+drive B:, etc up to f for drive P:.  (This byte, which ends up at
+offset $13 of the system control block (SCB), is also used by the
+CCP during the warm boot routine for establishing the default
+drive after exiting from a transient program.   The value at this
+location is updated each time you explicitly set the drive from
+the CCP by issuing a <drive letter>: <return> command.  This
+patch only sets the initial value used after a cold boot.)
+
+The default user area on a cold boot is controlled by the byte at
+$1230 for the DEC , MAY, and MAY-VT versions and at $0e30 for the
+AUG version.  The value of this byte ranges from 0 for user area
+0 to f for user area 15.  It ends up at offset $14 of the SCB and
+is also used by the CCP during a warm boot.
+
+
+
+EXTENDED 1581 SUPPORT
+
+In volume 8, issue 03 of Transactor  (November 1987), I presented
+a patch for the AUG  and DEC versions of C-128 CP/M that would
+allow full use of the capacity of the 1581 drive.  As I mentioned
+at the time, my 1581 disk format would not be compatible with the
+"official" Commodore version (i.e. the MAY CP/M release).  Since
+some of you may have obtained the MAY CP/M release since making
+my initial patch, you may be wondering how to access the 1581
+disks made with my version.  Fear not,  the next patch allows the
+MAY and MAY-VT  versions to read and write these early 1581
+disks, in addition to the "official" 1581 disks.   (The patch
+points are also given for the AUG and DEC  versions for the
+benefit of those who missed them the first time around.)  Change
+the listed bytes to the "new byte value" to complete the patch. 
+This patch fiddles with the disk parameter table entries for the
+EPSON QX-10 disk type (10 x 512 sectors), so you will lose
+compatability with this type, but gain an 800k disk instead.
+
+           ADDRESS                  New Byte Value
+-------------------------------------------------------------
+AUG   DEC   MAY   MAY-VT
+
+1404  2165  1f08  1f39                    00
+1405  2166  1f09  1f3a                    86
+1406  2167  1f0a  1f3b                    01
+1412  2173  1f16  1f47                    "MG 1581    (enter as text
+                                                      string)
+
+
+
+DEFAULT TERMINAL EMULATION
+
+When the MAY-VT version boots up, you are normally in ADM-31
+emulation mode.  You can change the default to VT-100 mode by
+changing the following bytes, starting at address 303E:
+
+Location    New Value
+
+303E        0                 (terminate sign-on message)
+303F        CD                (CALL  SETVT100)
+3040        0E
+3041        CB
+
+This patch works on the basis of using a part of the sign-on
+message to add a CALL to the routine for setting the emulation
+mode to VT-100.  This is done AFTER the screen initialization and
+sign-on message, which is configured to work under ADM-31 mode. 
+The new zero byte signifies an end of message; while the other
+three bytes are the call instruction.  This reduces the number of
+bytes available for custom sign-on message.  You may want to
+include a note in your sign-on message saying that VT-100 mode is
+active.  NOTE: Programs configured to run under ADM-31 mode will
+not give proper screen output in VT-100 mode because the screen
+formatting control codes are totally different.
+
+
+
+CORRECTING BUGS
+
+This next patch cures a bug in the AUG  version which prevents
+you from executing custom 8502 machine language routines from
+within CP/M.  The error is at $5cab which ends up in the BIOS
+8502 portion of the CP/M operating system.  Change this byte from
+a $c3 to a $6c and you are off to the races with BIOS function
+30, group 4, subfunction 9 "User call to 8502 Code Routine".  The
+8502 code at this location should be JMP (FD05), but the $6c for
+the JMP instruction was somehow scrambled into a $c3 by the cross
+assembler used to create the routine.
+
+
+
+COMMAND PROCESSOR
+
+The resident command processor for C-128 CP/M is the CCP.COM
+program.  This is the one which contains the internal CP/M
+commands such as DIR, USER, TYPE, etc., and which is used to load
+transient programs.  The CCP is loaded automatically during a
+cold boot and remains resident until you do a cold boot.  When a
+transient program is running, the CCP 'hides' in BANK 0 until it
+is required again.
+
+You can install your own custom command processor by either
+deleting the CCP.COM file on your boot disk and re-naming your
+custom processor as CCP.COM.  Another method is to change the
+name of the file that CP/M looks for when it boots up.  This is
+located at 0a95 to 0a9f on the AUG version and 0f6f to 0f79 on
+the DEC, MAY and MAY-VT versions.  A standard CP/M eleven byte
+parsed filename format is used with the name in uppercase ASCII,
+left justified in the 8 byte main and 3 byte type fields, padded
+with ASCII spaces.  The drive code from which the processor is to
+be loaded is located at 0a94 on the AUG version and 0f6e on the
+other versions.  This is normally set to a value of 1 which
+corresponds to drive A:.  You can set this to some other value if
+you wish:  0  = default drive, 1 = A:, 2 = B:, etc.
+
+
+
+CLOSING UP
+
+Now that you have completed all of the patch work on your system
+disk, the last thing to do is to save a copy of it.  This is done
+by SID's "w" command:
+
+     wcpm+.sys,100,zzzz
+
+where zzzz is the address that you copied down from SID's signon
+screen at the beginning of the process.  To refresh your memory,
+it should be 5d00 for the AUG  version, 6400 for the DEC 
+version, 6300 for the MAY version, or 6500 for the MAY-VT
+version.   After SID has re-written the file, it should display a
+message similar to:
+
+   yyyyh record(s) written
+
+where yyyy has a value of 00B8 for the AUG  version, 00C6 for the
+DEC  version,  00C4 for the MAY version, or 00C8 for the MAY-VT
+version.   After you get this message, you can exit SID with a
+<control>-C.  
+
+To see the effect of your changes, you must do a cold system
+reboot (i.e. with the modified CPM+.SYS disk in drive A:, press
+<control>-<enter> or the reset button).  When CP/M comes back on,
+your changes should be in force.   (If by some chance you have
+made an error in the patches, and you cannot get CP/M to re-boot
+or it does something unexpected, it is probably easier to start
+with a fresh copy of the old unmodified CPM+.SYS file rather than
+trying to fix your modified one.  It is also wise to wait a short
+time before you copy your modified CP/M system to all of your
+boot disks to check that you have not created any "hidden" bugs
+by your patching attempts.)
+
+
+At first glance, this document may seem to suggest a formidable
+task, especially for the novice CP/M programmer.  However, it is
+fully recognized that not everyone will want to make all of the
+changes mentioned above but a combination of a few of them can
+add some nice custom touches to your CP/M environment.  In
+addition, there are probably many more changes that could be made
+in the form of patches.  I leave these to other readers to figure
+out.  
+
+
+
+CCP.COM
+
+AUTO BOOTING
+
+There are two ways to auto boot applications programs, utilities,
+games, etc. on the C-128 in CP/M mode.  The first is a fairly
+well documented feature using a special SUBMIT file.  Each time
+CP/M is started up, it looks for a file named "PROFILE.SUB" on
+the default drive.  This is a regular CP/M submit file which is
+automatically executed on start up, similar to the IBM-PC-DOS
+"AUTOEXEC.BAT" file.  Unlike the IBM version, however,
+PROFILE.SUB requires that you have the utility "SUBMIT.COM" on
+the same disk.  This utility reads the statements in the SUBMIT
+file (standard CP/M commands or program names such as DIR or PIP
+etc.) and translates them into its own executable form.  The
+commands are not executed immediately, but are written to a
+temporary file called "SYSIN.$$$".  When all commands have been
+translated and written to this file, the file is read and they
+are executed.  This brings out two limitations of the PROFILE.SUB
+method of auto booting.  Because a temporary file is written to
+the disk, you cannot cover the write protect notch.  The method
+is also quite slow, especially with a 1541 drive, because it
+involves reading and writing a number of disk files.  In
+addition, since the PROFILE.SUB file is written in standard ASCII
+format, it is very susceptible to prying eyes.  All it takes is a
+"TYPE PROFILE.SUB" command for some one to sneak a peak at your
+secret boot routine.  Despite these limitations, you can do a
+very complicated set of start up procedures using this method.
+
+The second method is not well known at all, even to confirmed
+hackers who have been using other CP/M machines for years. 
+Although not quite as simple as using the PROFILE.SUB file, the
+method allows you to cover the write protect notch.  In addition,
+you do not need any other files on the disk other than the one
+you want to boot.  It is also much faster, because it does not
+have to read and execute the SUBMIT.COM program before executing
+the boot.  The nature of the technique limits you to a single
+CP/M command in the boot statement, but this is sufficient to
+start up most programs.  The technique involves changing a few
+bytes in the CP/M Console Command Processor (CCP.COM) file. 
+(Because you are changing the system files, never do this on your
+original disks!  Always work with a backup copy.  The CCP is the
+part of the CP/M system which reads and interprets commands typed
+in at the console.  It contains the code for accessing most of
+the built in CP/M commands, such as DIR, TYPE, etc.  It also
+loads and transfers execution to transient program files. 
+Control of the system is passed to CCP.COM after boot up and
+after each command or transient program has finished executing).
+
+Using  SID,   load in the file with the command:
+
+            SID  CCP.COM  <return>
+
+      SID will respond with:
+
+      NEXT    MSIZE     PC    END
+      0d80     0d80     0100  d2ff
+      #
+
+Addresses $04fc to $0503 contain the word "PROFILE".  You can
+change this to your application program name using SID's 's'
+command.   For example, to start up MBASIC example, you would
+use:
+    
+      you type     s04fc <return>
+      SID responds 04fc 50 -
+      you type     "MBASIC <space> <return>
+      SID responds 0503 2e -
+      you type     . <return>
+      SID responds #
+
+The total length of the string must be seven characters so pad
+the end of the filename with spaces.  
+
+
+Internal Command Names
+
+The CCP has a number of built in commands such as DIR, TYPE, etc. 
+The command names are stored in a table at 0637 of the CCP.COM
+file.   The text is in ASCII uppercase, with each name at least
+three characters long and subsequent names separated by one ASCII
+space ($20 or 32 dec.).  The default command string is:
+
+DIR TYPE ERASE RENAME DIRSYS USER
+
+You can change the names by which the CCP recognizes these
+commands by changing the ASCII text string.  The length of each
+name does not have to be the same as the original, but the total
+length cannot exceed 33 (decimal) bytes.   An example of a
+modified string is:
+
+CAT LIST DELETE NAME SYSTEM CHDIR
+
+In this case, CAT gives the disk directory, LIST will display a
+file on the screen, etc.
+
+
+Once you have made all of the necessary changes, save the
+modified file back to disk with the command:
+
+            wccp.com,0100,0d80 <return>
+
+The hex addresses listed above are identical for all current
+versions of CP/M implemented on the C-128 because they all use
+the same version of the CCP.
+
+Now press the reset button and watch your chosen program boot up
+automatically from a cold boot.  Of course, only one boot routine
+per disk is possible with this method.  If you format a new disk
+and copy the modified system files to it,  the boot command will
+be totally transparent if the bootable file is not present on the
+new disk.  This means that if the file mentioned in the boot
+routine is not present  on the disk, CP/M will start up in its
+normal manner and end with the familiar A> prompt.  Also note
+that this method cannot be used in with a PROFILE.SUB start up
+file because it de-activates this feature.
+
+
+
+ADDING VT-100 SUPPORT
+
+The MAY CP/M release comes with an option to add support for VT-
+100 terminal emulation.  This is another semi-standard CP/M
+terminal protocol which is totally different from the normal C-
+128 CP/M ADM-31 emualtion in its control codes.
+
+In order to add VT-100 support, you will need to re-assemble and
+re-construct the CPM+.SYS file from the source code files
+contained in USER area 1 of the MAY CP/M boot disk.  (Note that
+this disk is supplied in 3-1/2 inch format for use with a 1581,
+but you can still  use VT-100 emulation if you do not have a
+1581.  However, you must have access to a 1581 temporarily in
+order to copy the source code files onto a 5-1/4 inch disk.)  
+
+Start the process by formatting a work disk and copying all of
+the source code files from USER area 1 of the MAY boot disk onto
+it.  Because of the size of the files and the resulting output,
+you will need at least a 1571 double sided disk.  The 1750 RAM
+disk is also suitable and will be faster because of the numerous
+disk accesses required by the various assembly processes.  You
+will also need to copy the files MAC.COM, RMAC.COM, LINK.COM,
+SUBMIT.COM, ADDBIOS.COM, and GENCPM.COM from USER area 0 of the
+MAY boot disk.  Do not add any extra files because space is very
+tight, especially with a 1571 disk and the process will crash if
+inadequate disk space exists.
+
+Once the files have been copied,  edit the file CXEQU.LIB with
+your favorite text editor.  Near the beginning of the file, you
+will see a line which looks like:
+
+      use$vt100   equ   false
+
+      Change this to read:
+
+      use$vt100   equ   true
+
+and save the modified file under the same name.
+
+Once this minor change has been made, the creation of the new
+CPM+.SYS file is automatic.  All you have to do is type in:
+
+      SUBMIT CZ  <return>
+
+and the SUBMIT utility takes over from there.  It may prompt you
+to erase certain files when it has finished with them.  Just
+answer 'y' for yes to each prompt because the files are all
+temporary working files which are no longer required but take up
+valuable disk space.  Be patient, because the process can be
+fairly long (a half hour or more).  With a RAM disk, there is no
+indication that anything is happening apart from a few widely
+spaced messages on the screen.  With a disk drive, activity
+should be more easily recognizable with constant disk accesses.
+
+Once VT-100 emulation has been added to your system, you can
+select VT-100 mode by pressing the <control> key with the <plus>
+key on the numeric keypad.  To select ADM-31 mode, press
+<control> with the <minus> key on the numeric keypad.
+
+

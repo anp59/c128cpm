@@ -1,0 +1,1548 @@
+CPM7.TXT rev 1a 96-11-01
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+      THIS DOCUMENT IS COPYRIGHT (C) 1988, 1996 BY HERNE DATA
+      SYSTEMS LTD.  THE MATERIAL CONTAINED HEREIN MAY BE FREELY
+      USED FOR PERSONAL INFORMATION ONLY.  IF YOU REPRODUCE IT,
+      THIS COPYRIGHT NOTICE MUST NOT BE REMOVED.  THIS MATERIAL
+      MAY NOT BE EXPLOITED FOR COMMERCIAL PURPOSES.
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+Herne Data Systems Ltd., 
+PO Box 250, Tiverton, ON N0G 2T0 CANADA.  
+Voice/fax 519-366-2732, 
+e-mail herne@herne.com
+internet: http://www.herne.com
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+
+
+C-128 CP/M Memory Map
+=====================
+
+
+The memory map of the C-128 is complicated to say the least.  It
+is even more complicated in CP/M mode because the CP/M operating
+system is largely RAM based and, thus, the memory map changes
+with the CP/M version number and with operating system
+enhancements, modifications, etc..  This document presents a map
+of the memory configurations used in CP/M mode.  It is not
+claimed to be complete, but is a very useful starting point for
+your own explorations.  The map was compiled by painstakingly
+cross checking the CP/M system source code files against the
+various memory areas using various memory dumping tools (some
+specially written for this project).  The labels for the various
+memory locations are taken from the CP/M system source code
+files.
+        
+There are currently four official versions of C-128 CP/M
+generally available (apart from various beta test versions), as
+denoted by the dates displayed on boot up or by pressing the <F8>
+key.  There are some major differences in the memory maps of each
+version.  For clarity, these are defined here as:
+
+     AUG  =  Version dated  1 Aug 85    
+     DEC  =  Versions dated 6 Dec 85 or 8 Dec 85
+     MAY  =  Version dated 28 May 87
+
+A fifth version can be derived from the MAY version by re-
+assembling the source code files with the VT-100 emulation option
+enabled.  (For a full description of how to do this, see the
+section in the Customizing C-128 CP/M document entitled 'Adding
+VT-100 Support'.)   In this map it will be referred to as MAY-VT
+where there is a difference between it and the regular MAY
+version.   Where not specifically noted, it the same as the MAY
+version.
+
+It is recognized that there are many 'unofficial' or heavily
+customized versions of CP/M for the C-128 which various people
+have created.  In these cases, generally only the BANK 0 ROM;
+keyboard definition and parameter storage areas in low BANK 0
+memory; the BANK 1 zero page; I/O register areas; and the high
+common RAM parameter areas will be unchanged.  Fortunately, most
+of the other important system areas can be found easily by
+tracing the documented vectors in the BANK 1 zero page and the
+FDxx memory areas.
+
+There are also significant differences in the memory map
+depending on which processor is currently in use (the Z-80 or
+8502) .  This is important even in CP/M mode because most of the
+low level BIOS routines, such as standard serial port operations
+(some disk operations and all printer output), RAM disk
+operations, etc. use the 8502 mode.
+
+
+
+Z-80 operations
+
+BANK 0 :    MMU configuration register value $3F, or preconfig
+            register #1 (FF01)
+
+BANK 0 is the system bank.  The CP/M ROM's, BIOS and BDOS operate
+primarily in this bank.  Calls can be made by transient programs
+via the Bank 0/1 common memory portion above E000.
+
+
+0000 to 0FFF      Z-80 ROM code     (This code must be moved to bank 1
+                                    to be examined.)  The entry points
+                                    are as follows:
+
+Z-80 Restart  (RST) routines:
+
+0000              RST 0       COLD BOOT routine which takes over when
+                              the C-128 is first powered up or the
+                              reset button is pushed.  The routine
+                              continues at 003B.
+0008              RST 1       CP/M BOOT routine which is responsible
+                              for loading the CPM+.SYS file. 
+                              Continues at 018C.
+0010              RST 2       Entry point for executing main Z-80 ROM
+                              functions.  Continues with RST 4.
+0018              RST 3       Entry point for executing main Z-80 ROM
+                              functions.  Continues with RST 5.
+0020              RST 4       Continuation of RST 2.  Adjusts address
+                              vector lo byte then falls through to RST
+                              5.
+0028              RST 5       Get ROM function address from vector
+                              table and execute.
+0030              RST 6       Used to indicate ROM date.  Contains
+                              ASCII text of: 05/12/85
+0038              RST 7       Jump to interupt handler at FDFD.
+
+003B              Continue with COLD BOOT, set VIC speed to 1 MHz,
+                  test for mode, /EXROM, /GAME, etc.
+
+0054              Go to C-64 mode.
+
+00B4              Part of CP/M boot code.  Locate 'CPM+.SYS' file in
+                  CP/M directory and load if found.
+
+00ED              Filename to look for on cold boot: 
+                        BYT 0  'CPM+    SYS' 0
+
+0100              ROM function execution address vector table for
+                  RST 4 and RST 5.  Each is 2 bytes long in lo/hi
+                  format.  Note that separate routines are provided
+                  for the 40 and 80 column screens.
+
+
+      ROM function#           Points to   Purpose
+0100        0                 0684        write character in .D to 80
+                                          col screen and advance cursor.
+0102        2                 096E        40 col
+0104        4                 06AB        set 80 col cursor position 
+                                          .D = line, .E = column
+0106        6                 09BC        40 col
+0108        8                 06C2        move 80 col cursor up one line
+010A        A                 09DD        40 col
+010C        C                 06D1        move 80 col cursor down one
+                                          line
+010E        E                 09F1        40 col
+0110        10                06DD        move 80 col cursor left one
+                                          col
+0112        12                0A31        40 col
+0114        14                06E8        move 80 col cursor right one
+                                          col
+0116        16                0A3C        40 col
+0118        18                06F1        do a carriage return (go to
+                                          col 0) on 80 col
+011A        1A                0A45        40 col
+011C        1C                077A        erase to end of line, 80 col
+011E        1E                0A48        40 col
+0120        20                0780        erase to end of screen, 80 col
+0122        22                0A62        40 col
+0124        24                0791        insert a char, 80 col
+0126        26                0A8E        40 col
+0128        28                07CA        erase a char, 80 col
+012A        2A                0ABA        40 col
+012C        2C                07DC        insert a line, 80 col
+012E        2E                0ADF        40 col
+0130        30                081E        erase a line, 80 col
+0132        32                0B2D        40 col
+0134        34                071B        set character color, 80 col
+0136        36                0B7B        40 col
+0138        38                0710        set character attribute, 80
+                                          col
+013A        3A                0B62        40 col
+013C        3C                091C        get character and attribute,
+                                          80 col
+013E        3E                0995        40 col
+0140        40                0927        output char and attribute, 80
+                                          col
+0142        42                09A2        40 col
+0144        44                074E        get character, background and
+                                          border colors and current
+                                          attribute, 80 col
+0146        46                0BAE        40 col
+0148        48                00EB        (not used: code at EB is XOR A
+                                          : RET)
+014A        4A                00EB        (not used)
+014C        4C                00EB        (not used)
+014E        4E                00EB        (not used)
+0150        50                03E3        convert GCR logical track# in
+                                          @TRK to physical track and
+                                          sector in VICTRK and VICSEC.
+0152         52               046B        check GCR disk type SS or DS,
+                                          C-128 CP/M (CBM boot code
+                                          present) or C-64 CP/M.
+0154        54                0CFA        output a sound from SID chip.
+0156        56                00EB        (not used)
+0158        58                00EB        (not used)
+015A        5A                00EB        (not used)
+015C        5C                00EB        (not used)
+015E        5E                00EB        (not used)
+0160        60                0C3C        get logical position of cursor
+                                          on physical 80 col screen for
+                                          pseudo 80 col mapping.
+0162        62                0C4A        set logical position of cursor
+                                          on pseudo 80 col screen.
+0164        64                0BCF        copy line from 80 col pseudo
+                                          screen to physical 40 col
+                                          screen.
+0166        66                0C0C        copy 40 col window from pseudo
+                                          80 col screen to 40 col screen
+                                          RAM.
+0168        68                0526        print message from pointer on
+                                          top of stack, ending in 0 byte
+                                          to both 40 and 80 col screens
+                                          (used during boot).
+016A        6A                0532        print message from pointer in
+                                          .DE, ending with '$' to both
+                                          40 col and 80 col screens.
+016C        6C                052C        print XOR encrypted message
+                                          from pointer in .HL, ending
+                                          with '$' to both 40 col and 80
+                                          col screens.(used for disk
+                                          status message?)
+016E        6E                00EB        (not used)
+0170        70                0C7F        convert ASCII to screen code
+                                          for 40 col display.
+0172        72                0CC2        set 40 col cursor position in
+                                          80 col pseudo screen.
+0174        74                0CC7        set 80 col cursor position in
+                                          video RAM.
+0176        76                0CE4        look up physical color in
+                                          logical color table.
+0178        78                00EB        (not used)
+017A        7A                083D        do a block fill on 80 col
+                                          video RAM.
+017C        7C                08AE        do a block move on 80 col
+                                          video RAM.
+017E        7E                0660        copy character set to 80 col
+                                          video RAM.
+
+
+0180              JUMP to 090A      (screen character and attribute
+                                    print routine)
+0183              JUMP to 0933      (get 80 col character and
+                                    attribute)
+0186              JUMP to 0953      (set 80 col update address)
+0189              JUMP to 0945      (wait for 80 col update status)
+
+Continuation of ROM routines.  (Note: routines described above in
+the vector table have been omitted for brevity.)
+
+018C              Continuation of RST 1 (CP/M cold boot)
+
+02D2              Read boot sector (track 1, sector 0)
+
+0324              Load CPM+.SYS records from disk
+
+03E3              Convert block number to physical track and sector
+
+046B              Check boot sector for 'CBM'
+
+0480              Error handling for bad CPM+.SYS file
+
+058C              Print disk status message on line 25
+
+05A6              Convert decimal number in .A to ASCII digits, and
+                  print it
+05B5              Print character in .A
+
+05BD              Install character set in 80 col RAM
+
+0C7F              Set up 40 col character set
+
+0D1A              8502 code used in the C-128 reset procedure (moved
+                  to BANK 0 RAM at 1100)
+
+0D22              more 8502 code for various low level serial bus
+                  procedures used duing boot up.  Moved to BANK 0
+                  RAM at 3000, but eventually replaced by BIOS
+                  routines, then overwritten by the CCP.
+
+0EE5              8502 code copied to FFD0 for switching on the Z-
+                  80.
+
+0EF5              Z-80 code copied to FFE0 for switching on the
+                  8502.
+
+0F0A              Decoding table used to convert physical color
+                  codes into RGBI color codes
+
+0F1A              80 col char. bit map for: ASCII 92 ( \ back slash)
+0F22                          ASCII 94    ( ^ caret)
+0F2A                          ASCII 95    ( _ underscore)
+0F32                          ASCII 96    ( ` reverse apostrophe)
+0F3A                          ASCII 123   ( { left brace)
+0F42                          ASCII 124   ( | pipe)
+0F4A                          ASCII 125   ( } right brace)
+0F52                          ASCII 126   ( ~ tilde)
+0F5A                          ASCII 255 
+0F62        80 col char bit maps for 9 other various misc chars.              
+            
+
+
+The following values are written to the MMU registers at D500 to
+D50A during boot up:
+
+0FAA        Initial MMU configuration register (D500) value for
+            cold boot: 0D = Bank 0 RAM + BASIC LO ROM + CHAR ROM +
+            KERNAL ROM
+0FAB        MMU preconfiguration register (D501 to D504) values
+            used during initialization of CP/M mode:  3F, 7F, 3E,
+            7E
+0FAF        MMU mode configuration register (D505) initial value =
+            B0
+0FB0        RAM configuration register (D506) initial value = 0B
+0FB1        Page 0 pointer lo/hi (D507-D508) initial values = 00 00
+0FB3        Page 1 pointer lo/hi (D509-D50A) initial values = 01 00
+
+0FB5        sector skew table for C-128 native CP/M GCR disks, 21
+            sectors/track region   
+0FCA        19 sectors/track region
+0FDD        18 sectors/track region
+0FEF        17 sectors/track region
+
+
+Keyboard Tables
+
+1000 to 128F      SYSKEYAREA        String data for programmable
+                                    function keys. Each key can be
+                                    defined as a string. Definitions
+                                    "float" (i.e. you do not have to
+                                    adjust any pointers elsewhere) and
+                                    are terminated by a zero byte. 
+                                    Vector at FD0B points to this
+                                    table.  The default key defintions
+                                    are given in the document "The
+                                    Console." 10B0 to 128F is not used
+                                    with the default function key
+                                    definition set.  It is full of
+                                    FF's, but can be used for stashing
+                                    short temporary routines.
+
+
+1290 to 13EF      KEYCODES          ASCII codes for each key, 4 values
+                                    for each key (normal, "alpha mode",
+                                    shift and control) arranged
+                                    according to key scan code.  Note
+                                    that "alpha mode" defaults to
+                                    uppercase and is toggled on and off
+                                    by pressing the C= logo key.  It is
+                                    equivalent to a software "caps
+                                    lock", but is not related to either
+                                    the hardware <caps lock> or <shift
+                                    lock> keys.  The vector at FD09
+                                    points to 1290.  The default key
+                                    assignments are given in "The
+                                    Console".  The key code values are
+                                    as follows:
+             
+                              Value             Meaning
+
+                              0                 null (equivalent to no
+                                                key press)
+
+                              1 to 7F           normal ASCII codes
+                                                (control codes, letters,
+                                                numbers, symbols, etc)
+
+                              80 to 9F          key has been programmed
+                                                as a string, which is
+                                                defined in SYSKEYAREA (32
+                                                possible "programmable"
+                                                keys)
+                                    
+                              A0 to AF          80 col character color
+                                                (<ctrl> with number keys
+                                                on main keyboard)
+                                    
+                              B0 to BF          80 col background color
+                                                (<ctrl> with number keys
+                                                on numeric keypad)
+
+                              C0 to CF          40 col character color
+
+                              D0 to DF          40 col background color
+
+                              E0 to EF          40 col border color
+
+                              F0                toggle disk status line
+                                                on/off (<ctrl>-
+                                                <run/stop>)
+
+                              F1                system pause (<no-scroll>
+                                                key)
+
+                              F2                track cursor on 40 col
+                                                screen (<ctrl>-<no-
+                                                scroll>)
+
+                              F3                move 40 col screen window
+                                                left 1 char (<ctrl>-
+                                                <cursor left> on the
+                                                cursor keypad above the
+                                                main keyboard is defined
+                                                as 4  F3's)
+
+                              F4                move 40 col screen win 
+                                                right 1 char (<ctrl>-
+                                                <cursor right> on the
+                                                cursor keypad above the
+                                                main keyboard is defined
+                                                as 4  F4's)
+
+                              F5                unlock all locked MFM
+                                                disk types  (<ctrl>-
+                                                <home>)
+
+                              F6                select ADM31 screen
+                                                emulation mode (<ctrl>-
+                                                <minus> on numeric
+                                                keypad) (MAY-VT version
+                                                only. Note: the toggle is
+                                                not implemented in the
+                                                standard issue system
+                                                file, but is available as
+                                                an option when re-
+                                                assembling the source
+                                                code.)
+
+                              F7                select VT100 screen
+                                                emulation mode (<ctrl>-
+                                                <plus> on numeric keypad)
+                                                (MAY-VT version only,
+                                                note: VT-100 is not
+                                                implemented in the
+                                                standard issue system
+                                                file, but is available as
+                                                an option when re-
+                                                assembling the source
+                                                code.)
+
+                              F8 to FE          not currently defined
+                                                (reserved for future
+                                                expansion)
+
+                              FF                do a system cold re-start
+                                                (<control>-<enter>)
+
+Notes:      (1)  when bit 7 of FD22 (STATENABLE) is on, key codes
+            of $80 and greater are returned to the calling program
+            without executing the special function as outlined
+            above.
+  
+            (2)  FD4C contains a vector to the address of the table
+            of 16 bit execution addresses (low byte/high byte
+            format) of key codes F0 to FF.  This vector, or the
+            individual vectors in the address table, can be changed
+            to point  to your own custom code.
+
+
+13F0 to 13FF      COLORTBL          logical color values 00, 11, 22,
+                                    ... FF for use with <esc-esc-esc>
+                                    printing and A0 to EF key color
+                                    values. The vector at FD0D points
+                                    here.  The low nibble at position
+                                    13F0+z (0x) is the physical color
+                                    assigned to the 80 column logical
+                                    color z.  The high nibble is the
+                                    physical color for the 40 column
+                                    logical color z.
+
+1400 to 1BCF      SCREEN40          pseudo 80 column screen character
+                                    buffer for the 40 column screen
+
+1C00 to 23CF      COLOR40           pseudo 80 column screen color
+                                    buffer for 40 column screen
+
+
+2400              BANKPARMBLK       (misc. system parameters and flags)
+
+
+Terminal Emulation Parameters
+
+40 Column:
+2402              CUROFFSET         position counters used by psuedo 80
+                                    col screen
+2404              OLDOFFSET         for 40 col screen
+2405              PRTFLG            XOR mask value for printing 'coded'
+                                    messages
+2406              FLASHPOS          cursor address in actual 40 col
+                                    screen RAM
+2408              PAINTSIZE         number of rows to move over for 40
+                                    col screen shift ($18 or $19)
+2409              CHARADR40         pointer to current char in pseudo
+                                    screen RAM
+240B              CHARCOL40         40 col character position - column  
+                                          0-79
+240C              CHARROW40         - screen row      0-24
+240D              ATTR40            40 col attribute  (character color)
+240E              BGCOLOR40         background color
+240F              BDCOLOR40         border color
+2410              REV40             reverse video flag
+
+80 Column:
+2411              CHARADR           pointer to current char in 80 col
+                                    RAM
+2413              CHARCOL           80 col character position - column  
+                                          0-79
+2414              CHARROW                 - screen row      
+                                          0-24
+2415              CURRENTATR        80 col attribute
+                                       bit 7:  0 =    alternate (block
+                                                      graphics) char set
+                                               1 =    ASCII character set
+                                           6:  0 =    normal video
+                                               1 =    reverse video 
+                                           5:  0 =    no underline 
+                                               1 =    underline
+                                           4:  0 =    no blink
+                                               1 =    blink
+                                           3:  1 =    red on
+                                           2:  1 =    green on 
+                                           1:  1 =    blue on
+                                           0:  1 =    intensity on
+
+2416              BGCOLOR80         background color
+2417              CHARCOLOR80       character color
+
+2418              PARMBASE          pointer to currently active
+                                    parameter set (40 or 80 col)
+241A              PARMAREA80        pointer to 80 col parameters
+                                    ($2411)
+241D              PARMAREA40        pointer to 40 col parameters
+                                    ($2402)
+2420              BUFFER80COL       temporary storage for 80 col video
+                                    routines
+2471              KEYBUF            temporary storage buffer for
+                                    currently pressed key code
+2488              CONTROL CODES     flag for control/shift keys
+                                    pressed, and current character
+                                    mode.
+                                    bit         key pressed
+                                    7                 left shift key
+                                    5                 C= key
+                                    4                 right shift key
+                                    2                 control key
+
+                         bit              1   0       character mode
+
+                                          0   0       lower case
+                                          0   1       alpha mode
+                                          1   0       shift
+                                          1   1       control
+
+2489              MSGPTR            pointer to current function key
+                                    message string
+248B              OFFSET            cursor pointers used by various
+                                    screen functions
+248C              CURPOS            printing routines
+
+248E              SYSFREQ           power line frequency : 
+                                          0 = 60 Hz, FF = 50 Hz
+
+2500 to 25FF      (unused)          this is a nice spot to hide some
+                                    Bank 0 custom code.
+
+2600 to 2A3F      BIOS8502          8502 BIOS code (see map of 8502
+                                    mode below for description)
+
+2A40 to 2BFF      (unused)          another nice place to stash custom
+                                    code.      
+
+2C00 to 2FFF      VICSCREEN         40 column video RAM, also appears
+                                    in hardware I/O area and Bank 2. 
+                                    (Note this is separate from normal
+                                    C-128 40 col video RAM at $0400
+                                    which is unused in CP/M mode
+                                    because it is under the Z-80 ROM.)
+
+3000  to 3CFF     CCPBUFFER         An image of the CCP.COM hides here
+                                    during transient program execution
+                                    so that it can re-load instantly on
+                                    a warm boot when the transient
+                                    program is finished.
+
+Note:       3C00 to 3CFF is also used during a cold boot as
+            follows:
+3C00              BOOTPARM          various flags etc used during cold
+                                    boot
+3C02              LDBLKPTR
+3C04              BLKUNLDPTR
+3C06              BLOCKSIZE
+3C07              BLOCKEND
+3C09              BLOCKPTRS
+3C29              INFOBUFFER
+3C35              EXTNUM
+3C36              RETRY
+3C77              BOOTSTACK
+
+3D00              BANK0FREE         BANK 0 free space which can be used
+                                    by transient programs, if properly
+                                    addressed.  It extends to 98FF on
+                                    DEC and MAY  versions, 97FF on MAY-
+                                    VT version, and 9BFF on AUG
+                                    version.  Areas above about 6000
+                                    are primarily used by CP/M as
+                                    temporary directory and file
+                                    buffers and buffer control blocks
+                                    (BCB's).  Programmers can use, but
+                                    beware of implications, especially
+                                    during file I/O.
+
+Operating system areas:
+
+Component               AUG         DEC         MAY         MAY-VT            
+
+Bank BDOS               9C00        9900        9900        9800  
+Resident BDOS           EE00        EA00        EA00        EA00
+Bank BIOS               CA00        C700        C800        C600
+Resident BIOS           F400        F000        F000        F000
+
+The 'Bank' portions are accessible in BANK 0 only, while the
+'Resident' portions are accessible in either BANK 0 or BANK 1.
+
+
+The MFM disk parameter table (DPT) is located at:
+                  D876 to DA75 in the  AUG version
+                  D6BD to D8BC in the DEC versions
+                  D860 to DA5F in the MAY version
+                  D891 to DA90 in the MAY-VT version
+
+The DPT contains the basic information to allow access to foreign
+MFM disk types.  Its structure is described in detail in the
+document 'The Disk System'.    In all versions of C-128 CP/M, the
+base address for the DPT can be found directly by the pointer at
+FD46.
+
+The other major component of accessing disk drives is the
+extended disk parameter header or XDPH.  This is the working area
+used by the BDOS for actual disk access.  When a disk is logged
+in, the appropriate values are copied from the DPT to the XDPH
+for general use.  The drive table address which contains the
+vectors to the XDPH for each logical drive can be found at
+BIOS_BASE+D7.  (This is not  a documented vector location,
+however, but merely a point in the BIOS DRVTBL routine which
+happens to contain the address.  The correct method to get the
+drive table address is to use the BIOS DRVTBL function call
+directly.)   The DRVTBL is located at:
+
+CP/M Version                  DRVTBL Location
+
+      AUG               FB78
+      DEC/MAY           FBD1
+
+
+
+The DRVTBL contains a series of address pointers to the disk
+parameter header base address (DPH_BASE) for each logical drive
+(A: to P:).  If a drive is not physically supported (drives F: to
+L: and N: to P:, and M:, when no RAM expander is present),  the
+drive table vector value is 0000.  The default DRVTBL vectors
+are:  
+
+                  Vector points to:
+Drive             AUG         DEC/MAY
+A:                FA6E        FA82  
+B:                FAA5        FAB9  
+C:                FADC        FAF0  
+D:                FB13        FB27  
+E:                FB4A        FB5E  
+F: to L:                NOT USED    
+M:                NOT USED    FB96  
+N: to P:                NOT USED    
+
+For each drive the $37 byte long XDPH has the following format:
+
+DPH_BASE-A        pointer to the sector write routine for this drive
+DPH_BASE-8        pointer to the sector read routine for this drive
+DPH_BASE-6        pointer to the login routine for this drive
+DPH_BASE-4        pointer to the initialization routine for this
+                  drive
+DPH_BASE-2        physical drive assigned to the logical drive
+                  according to values listed below under VICDRV.
+DPH_BASE-1        secondary disk type byte from byte 2 of DPT entry.
+DPH_BASE          pointer to logical to physical sector skew table
+                  (0000 if none)
+DPH_BASE+2        9 bytes of scratch pad for use by BDOS
+DPH_BASE+B        media flag 0 if disk logged in, FF if disk has
+                  been changed
+DPH_BASE+C        pointer to DPB values for this drive (contained
+                  later in entry)
+DPH_BASE+E        pointer to CSV scratch pad area (used to detect
+                  changed disks)
+DPH_BASE+10       pointer to ALV scratch pad area (used to keep
+                  track of drive storage capacity)
+DPH_BASE+12       pointer to directory buffer control block (BCB)
+DPH_BASE+14       pointer to data BCB
+DPH_BASE+16       pointer to the directory hashing table
+DPH_BASE+18       bank for hash table
+DPH_BASE+19       DPT entry for this drive
+DPH_BASE+2A       maximum sector number and MFM lock flag (bit 7 on
+                  if locked)
+DPH_BASE+2B       pointer to entry in master MFM DPT table
+
+
+E000              Common_Free       Free memory common to both BANK 0
+                                    and 1.  Normally used by RSX
+                                    (resident system extension)
+                                    programs, as well as other
+                                    operating system shells and
+                                    extensions, and self re-locating
+                                    utilities such as SID, SUBMIT,
+                                    SAVE, GET, PUT, etc.  Can be used
+                                    by experienced  programmers if you
+                                    are aware of consequences, such as
+                                    possible crash when using another
+                                    program or RSX that also resides in
+                                    this area.  Extends to E9FF in DEC
+                                    and MAY versions and  EDFF in AUG
+                                    version
+
+System Control Block (SCB):
+
+The SCB is a temporary flag and storage area used for
+communication amongst transient programs, the BIOS, BDOS and CCP. 
+It is $64 (dec. 100) bytes long , located immediately before BIOS
+jump table, (DEC and MAY Versions EF9C to EFFF;  AUG Version 
+F39C to F3FF) can be read or written with BDOS function 49.  
+
+Absolute*   Byte Offset**           Function
+Address           (from start of SCB)
+
+xx9C        00 - 04                 reserved for various system flags+
+xxA1        05                      BDOS version number  (hex 31)
+xxA2        06 - 09                 reserved for user determined flags
+                                    (put your own stuff here)
+xxA6        0A - 0F                 reserved for system use+
+xxAC        10 - 11                 16 bit program return code for
+                                    passing data to chained programs
+xxAE        12                      reserved for system use+
+xxAF        13                      default drive to return to after
+                                    completion of transient program. 
+                                    (0 = A:, 1 = B:, etc.)  The CCP
+                                    looks here during a cold or warm
+                                    start.
+xxB0        14                      default user area for cold or warm
+                                    start (0 to F).
+xxB1        15 - 17                 reserved for system use+
+xxB4        18                      CCP program mode as set by the
+                                    SETDEF utility:
+                              Bit   1     0     (filename name display)
+                                    0     0     do not display parsed
+                                                program name after
+                                                entering on command line
+                                    1     1     display parsed program
+                                                name after entry on
+                                                command line
+
+                              Bit   4     3     (file search order)
+                                    0     0     only look to execute .COM
+                                                files (default)
+                                    1     0     look for .SUB type files
+                                                first, then .COM files if
+                                                no .SUB file.  Do not
+                                                need to explicitly
+                                                specify SUBMIT to access
+                                                .SUB files.  (eg. to
+                                                execute the file TEST.SUB
+                                                you can type in TEST
+                                                instead of SUBMIT  
+                                                TEST.)
+                                    0     1     look for .COM then .SUB
+
+xxB5        19                      reserved for system use+
+xxB6        1A                      screen width - 1   (set to 79)
+xxB7        1B                      current column position on screen
+                                    (0 to 79)
+xxB8        1C                      screen page length (24 lines per
+                                    screen)
+xxB9        1D - 21                 reserved for system use+
+xxBE        22 - 2B                 assignment vectors for CP/M's
+                                    logical I/O devices.  16 bit value
+                                    used as follows:
+
+                  bit    device
+                  f     KEYS        (input only)
+                  e     80COL       (output only)
+                  d     40COL       (output only)
+                  c     PRT1        (device 4 serial printer, output
+                                    only)
+                  b     PRT2        (device 5 serial printer, output
+                                    only)
+                  a     6551        (not really supported, it was
+                                    supposed to be on an                
+                                    external card which was never
+                                    produced)
+                  9     RS232       (input or output)
+                  8 to 0      not used
+
+
+            If a bit is on, then the physical device is assigned to
+            that logical device.  Each logical device can have more
+            than one physical device assigned to it and each
+            physical device can be assigned to more than one
+            logical device.  Logical devices and their assignment
+            vector locations are:
+
+xxBE                          22 - 23           CONIN
+xxC0                          24 - 25           CONOUT
+xxC2                          26 - 27           AUXIN
+xxC4                          28 - 29           AUXOUT
+xxC6                          2A - 2B           LSTOUT  
+ 
+xxC8        2C          Page mode         0 = display 1 page of data at
+                                          a time
+                                          1 = display continuously
+                                          (this is the annoying flag
+                                          that causes CP/M TYPE command
+                                          to say "press return to
+                                          continue" after each screenful
+                                          of data.)
+xxC9        2D          reserved for system use
+xxCA        2E          determines effect of CTRL-H.              
+                        0   = backspace and delete
+                        FF  = delete and echo
+                        Default 0.
+xxCB        2F          determines effect of <delete>
+                        0   = delete and echo
+                        FF  = backspace and delete
+                        Default FF.
+xxCC        30 - 32     reserved for system use+
+xxCF        33 - 34     16 bit console mode flag (default value =
+                        0000):
+                              bit         meaning
+                              0           0 = return normal status for
+                                          BDOS function 11
+                                          1 = CTRL - C only status
+
+                              1           0 = enable CTRL-S /CTRL-Q stop
+                                          scroll/start scroll
+                                          1 = disable stop/start scroll
+
+                              2           0 = normal console output
+                                          1 = raw console output,
+                                          disables tab expansion, and
+                                          CTRL-P printer echo
+
+                              3           0 = enable CTRL-C program
+                                          termination
+                                          1 = disable CTRL-C
+
+                              8 - 9       used for RSX's
+
+xxD1        35 - 36           address of 128 byte scratch pad buffer,
+                              points to EE6A on DEC and MAY, and F26A
+                              on AUG.
+xxD3        37                output string delimiter (normally $)
+xxD4        38                LIST output flag        0 = console output
+                                                      only
+                                                      1 = echo output to
+                                                      printer
+xxD5        39                reserved for system use+
+xxD6        3A - 3B           pointer to start of SCB (F39C on AUG or
+                              EF9C on DEC and MAY) 
+xxD8        3C - 3D           current DMA (disk buffer) address,
+                              (default 0080)
+xxDA        3E                current default drive (0 = A:, 1 = B:,
+                              etc.), set with BDOS function 14, but
+                              reset to value from SCB+13 when CCP
+                              regains control after a warm start.
+xxDB        3F - 40           BDOS disk info flags.  Contents vary
+                              according to current BDOS function.  For
+                              example: Pointer to actual keyboard
+                              input scratch pad area  for BDOS console
+                              input functions ; or if SCB offset
+                              $41=$FF, then points to address of file
+                              control block where an error occured.
+xxDD        41 - 42           FCB flag
+xxDF        43                last BDOS function exectuted (usually
+                              used to find out where an error occured)
+xxE0        44                current user number (0 to F), set with
+                              BDOS function 32, but reset to value
+                              from SCB+14 when ccp regains control
+                              after a warm start.
+xxE1        45 - 49           reserved for system use+
+xxE6        4A                BDOS multi sector count for read/write
+xxE7        4B                BDOS error mode:        FF = system does not
+                                                      display 
+                                                      error messages,
+                                                      returns to current      
+                                                      program
+                                                      FE = display error
+                                                      messages, return
+                                                      to current program.
+                                                      0 = terminate
+                                                      current program on
+                                                      error and display
+                                                      message
+
+xxE8        4C - 4F           Drive search chain: up to 4 drives can
+                              be specified:
+                                    0 = current default drive, 1 = A:,
+                                    2 = B:, etc. If program or file is
+                                    not found on specified drive, the
+                                    search chain will be used and each
+                                    drive in the list will be tried in
+                                    sequence until it is found.  Unused
+                                    spots filled with FF's.
+
+xxEC        50                Temporary file drive: 0 = default, 1 =
+                              A:, etc
+xxED        51                Error drive: number of drive where last
+                              I/O error was encountered (0 = default,
+                              1 = A:, etc)
+
+xxEE        52 - 53           reserved for system use+
+xxF0        54                BIOS flag to indicate disk changed
+xxF1        55 - 56           reserved for system use+
+xxF3        57                BDOS flags: bit 7 set then system
+                              displays expanded error messages                
+                              (default is set)
+
+xxF4        58 - 59           date in days in binary since 1 jan 78
+xxF6        5A                hour in BCD
+xxF7        5B                minutes in BCD
+xxF8        5C                seconds in BCD
+xxF9        5D - 5E           start of common memory (E000)
+xxFB        5F - 61           Jump to BDOS error handling routine (5F
+                              is Z80 'JP' instruction, 60-61 is the
+                              address according to:
+                              AUG         9C7C
+                              DEC         997C
+                              MAY         9A7C
+                              MAY-VT      987C
+
+xxFE        62 - 63           top of user TPA  (from vector at 0006 -
+                              0007: entry point to BDOS)
+
+Notes:      *     for AUG version, xx = F3, while for DEC and MAY
+                  versions, xx = EF.
+            **    for use with BDOS function call 50.
+            +     areas marked 'reserved for system use'
+                  contain undocumented, unkown flags that are
+                  used as temporary storage by a variety of
+                  BDOS and BIOS routines.
+
+BIOS Jump table:   
+
+(BIOS_BASE=       F000 in DEC and MAY versions
+                        F400 in AUG version)                     
+
+(Note: the first byte of each group is a Z80 jump instruction to
+the address contained in the next two bytes.)
+                                                      BIOS Function number
+
+BIOS_BASE+00            cold boot                                 0
+BIOS_BASE+03            warm boot                                 1
+BIOS_BASE+06            check CONSOLE input status                2
+BIOS_BASE+09            read CONSOLE character                    3
+BIOS_BASE+0C            write CONSOLE character                   4
+BIOS_BASE+0F            write LIST character                      5     
+BIOS_BASE+12            write AUXILIARY OUT character             6
+BIOS_BASE+15            read AUXILIARY INPUT character            7
+BIOS_BASE+18            move to track 0 on selected disk          8
+BIOS_BASE+1B            select disk drive                         9
+BIOS_BASE+1E            set track number                          10
+BIOS_BASE+21            set sector number                         11
+BIOS_BASE+24            set DMA address                           12
+BIOS_BASE+27            read specified sector                     13
+BIOS_BASE+2A            write specified sector                    14
+BIOS_BASE+2D            check LIST status                         15
+BIOS_BASE+30            translate logical to phys sector          16
+BIOS_BASE+33            check CONSOLE output status               17
+BIOS_BASE+36            check AUXILIARY INPUT status              18
+BIOS_BASE+39            check AUXILIARY OUTPUT status             19
+BIOS_BASE+3C            get address of character I/O table        20
+BIOS_BASE+3F            initialize character I/O devices          21
+BIOS_BASE+42            get address of disk drive table           22
+BIOS_BASE+45            set# of log sectors to read/write         23
+BIOS_BASE+48            force I/O buffer flush                    24
+BIOS_BASE+4B            memory move                               25
+BIOS_BASE+4E            get or set time                           26
+BIOS_BASE+51            select memory bank                        27
+BIOS_BASE+54            specify bank for DMA operation            28
+BIOS_BASE+57            set buffer bank                           29
+BIOS_BASE+5A            call user system functions                30
+
+The following BIOS_BASE entries are not officially documented
+vectors, but are merely part of BIOS routines which are located
+at the same offset address for all versions of C-128 CP/M.  They
+can be checked for quick access to the specified system
+parameters, but cannot be relied upon in cases of customized CP/M
+installations.
+
+BIOS_BASE+D3 to +D4           16 bit pointer (lo/hi byte) to physical
+                              device table.  This address is returned
+                              by calling BIOS function 20.  (points to
+                              F7FD in AUG version and F3E1 in DEC and
+                              MAY)
+
+DEVTBL = Physical device table, each entry is 8 bytes long
+consisting of the following data:
+
+ device name      (6 bytes, padded with spaces)
+ mode byte        (1 byte)
+ baud rate        (1 byte)
+
+Mode byte flags*              device function
+
+0000 0001                     device can do input
+0000 0010                     device can do output
+0000 0011                     device can do both
+0000 0100                     supports software selected baud rate
+0000 1000                     supports serial I/O
+0001 0000                     supports XON/XOFF
+--------------------------------------------
+*Note : combinations of mode byte flags are used for each device,
+such as :
+
+   %0000 0011 + %0000 0100 + %0001 0000 = %0001 0111  
+
+which means that the device can do both input and output, has
+software selectable baud rates and supports XON/XOFF protocol.
+
+
+Baud rate byte          function
+--------------------------------------------
+   0                          no baud rate
+   1                          50 baud
+   2                          75
+   3                          110
+   4                          135
+   5                          150
+   6                          300
+   7                          600
+   8                          1200
+   9                          1800        Note: for all practical uses,
+                                          the C-128 CP/M mode
+   a                          2400        will not reliably support
+                                          anything over 1200 baud
+   b                          3600        because of software overhead.
+   c                          4800
+   d                          7200
+   e                          9600
+   f                          19200
+----------------------------------------------
+C-128 physical devices are: KEYS, 80COL, 40COL, PRT1, PRT2, 6551,
+and RS232
+
+
+BIOS_BASE+D7 to D8      pointer to DRVTBL (List of XDPH addresses). 
+                        This address is returned by calling BIOS
+                        function 22.  It points to FBD1 on DEC and
+                        MAY versions and FB78 on AUG.
+
+FC00 to FD00      INTBLOCK          This block contains all FD's.  It
+                                    is the pointer to the main interupt
+                                    vector (FDFD).  A hardware quirk of
+                                    the C-128 requires from FC00 to
+                                    FD00 to be all FD's else the low
+                                    byte of the interupt pointer
+                                    address will not be correctly
+                                    specified on the Z-80 address bus.
+                                    If you use this seemingly unused
+                                    area for your own programs, it will
+                                    crash on a random basis if an 
+                                    interupt occurs, unless you disable
+                                    the interupts first with a Z-80 
+                                    'DI'  instruction.  BEWARE!!
+
+PARMBLOCK         BIOS parameter working storage for passing to 8502
+FD01              VICCMD      BIOS 8502 command to execute
+FD02              VICDRV      device number to execute for printer, or 
+                              for disk i/o:
+   
+                        bit value         drive
+
+                        0000 0000         17xx expasion RAM disk
+                        0000 0001         unit 8, drive 0   (default
+                                          drive A: and E:)
+                        0000 0010         unit 9, drive 0   (default
+                                          drive B:)
+                        0000 0100         unit 10, drive 0  (default
+                                          drive C:)
+                        0000 1000         unit 11, drive 0  (default
+                                          drive D:)
+                        1000 0001         unit 8, drive 1
+                        1000 0010         unit 9, drive 1
+                        1000 0100         unit 10, drive 1
+                        1000 1000         unit 11, drive 1
+
+FD03              VICTRK      track number to execute disk operations
+                              on,  or secondary address for printer
+                              operations
+FD04              VICSECT     sector number for disk operations.  For
+                              MFM disks side 1, use $80 + sector #
+FD05              VICCOUNT    number of sectors to read/write for disk
+                              I/O;  or number of characters to print
+                              on printer; or low byte of address to
+                              jump to for custom 8502 code.
+FD06              VICDATA     various data/status items for disk and
+                              printer; or high byte of address to jump
+                              to for custom 8502 code.
+FD07              CURDRV      current logical drive using device A: (0
+                              = drive A:, 4 = drive E:)
+FD08              FAST        drive type flags (updated after each
+                              drive i/o operation), 
+                              bit  = 1    drive is fast (1571 or 1581)
+                              bit  = 0    drive is slow (1541 type)
+
+                        bit         drive
+                        ------------------------
+                        0           A:  (device 8)
+                        1           B:          9
+                        2           C:         10
+                        3           D:         11
+                        4-7      (not currently used)
+
+FD09              KEYTBL      pointer to key scan definition table
+                              (1290)
+FD0B              FUNTBL      pointer to function key table (1000)
+FD0D              COLORTBL    pointer to logical color table (13F0)
+FD0F              FUNOFFSET   offset to current function key (0 if
+                              none)
+
+FD10              SOUND1      parameters for ASCII bell sound
+                              (CHR$(7)).  FD10 is output  to SID
+                              register 5, FD11 to register 24.
+FD12              SOUND2      FD12 is output to SID register 1, FD13
+                              to register 6.
+FD14              SOUND3      FD14 is output to SID register 4 to turn
+                              on sound, then FD13 to register 4 to
+                              turn it off.
+
+The following storage locations are used by the general BIOS and
+BDOS function calls.  Values for BIOS 8502 storage (FD01 etc
+above) are extracted from here for use by the 8502 routines:
+
+FD16              @TRK        track number used in BDOS and BIOS
+                              routines
+FD18              @DMA        address of disk data buffer
+FD1A              @SECT       sector number used in BDOS and BIOS routines
+FD1C              @CNT        number of sectors to read/write
+FD1D              @CBNK       current bank  (0 or 1)
+FD1E              @DBNK       bank for disk data buffer (0 or 1)
+FD1F              @ADRV       absolute drive code (0 = A:, 1 = B:,
+                              etc)
+FD20              @RDRV       relative drive code (used to indicate
+                              device number, same values as for VICDRV
+                              outlined above)     
+
+FD21              CCPCOUNT    # 128 byte records to load in CCP.COM
+                              file, used during cold and warm boot
+                              routines.
+
+FD22              STATENABL   general purpose status flags:
+
+                              bit   meaning when set to 1
+
+                              7     allow 8 bit key codes (key values
+                                    above $80 will not result in
+                                    special functions defined in key
+                                    scan table)
+                              6     track cursor on 40 col screen when
+                                    doing input on 80 col screen
+                              5 to 1      (not used?)
+                              0     display disk status on bottom line
+                                    of screen.
+
+
+FD23              EMULATION   pointer to screen emulation code address
+                              (used to switch between VT100 and ADM31
+                              modes on MAY version which has been
+                              assembled with VT100 option enabled.  It 
+                              can be pointed to custom code (in bank
+                              0) for other types of emulation if
+                              desired.)  Points to D0C2 on AUG, CE21
+                              on DEC , CF2C on MAY, and CD31 on MAY-VT
+                              for ADM-31 mode or CEB8 for VT-100
+                              mode..
+
+FD25              USARTADR    pointer to external 6551 address (DE00,
+                              but not normally used)
+
+FD27              INTHL       temporary storage for CPU registers
+                              during 
+FD3D              INTSTACK    interupts, BDOS and BIOS calls, etc.
+FD3F              HLTEMP
+FD41              DETEMP
+FD43              ATEMP
+
+FD44              SOURCEBNK   source bank for inter-bank memory move 
+                              (0 or 1)
+FD45              DESTBNK     destination bank for inter-bank move   
+                              (0 or 1)
+
+FD46              MFMTBLPTR   pointer to MFM disk parameter table
+                              (DPT), points to D876 on AUG, D6BD on
+                              DEC,  D860 on MAY, and D891 on MAY-VT.
+
+FD48              PRTCONV1    pointer to character conversion routine
+                              for PRT1 printer (normally ASCII to
+                              PETSCII), not used on AUG, points D0AE
+                              on DEC,  D20F on MAY and D240 on MAY-VT.
+FD4A              PRTCONV2    pointer to character conversion routine
+                              for PRT2, normally the same as above.
+FD4C              KEYFXFUNC   pointer to dispatch table for executing
+                              extended key codes functions F0 to FF,
+                              Not used on AUG, points to CB4C on DEC,
+                              CC4F on MAY, and CA4F on MAY-VT.  This
+                              table can be patched to add your memory
+                              resident special functions, such as pop-
+                              up routines and screen dumps.  Default
+                              dispatch table values are:
+
+            Key Code    Execution Vector
+                        DEC         MAY         MAY-VT      Function
+
+            F0          CB6C        CC6F        CA6F        disk status
+                                                            line
+            F1          CB8C        CC8F        CA8F        pause
+            F2          CBBC        CCC0        CAC0        track cursor
+            F3          CBC5        CCC9        CAC9        40 col screen
+                                                            left
+            F4          CBCD        CCD1        CAD1        40 col scrn
+                                                            right
+            F5          CBDC        CCE0        CAE0        unlock MFM
+            F6          CBC4        CCC8        CB09        ADM 31 mode*
+            F7          CBC4        CCC8        CB0E        VT 100 mode*
+            F8          CBC4        CCC8        CAC8  (not normally used)
+            F9          CBC4        CCC8        CAC8  (not normally used)
+            FA          CBC4        CCC8        CAC8  (not normally used)
+            FB          CBC4        CCC8        CAC8  (not normally used)
+            FC          CBC4        CCC8        CAC8  (not normally used)
+            FD          CBC4        CCC8        CAC8  (not normally used)
+            FE          CBC4        CCC8        CAC8  (not normally used)
+            FF          0000        0000        0000        reboot
+
+* MAY VT version only.
+
+
+
+Note:       the following RS-232 locations are only applicable to
+            CP/M versions of DEC and later.  The AUG version does
+            not support the RS-232 port.
+
+FD4E              XXDCONFIG         RS-232 configuration register
+FD4F              RS232STATUS       RS-232 status register
+                                    bit   meaning
+
+                                    7     0 = ready to receive data
+                                          1 = not ready
+                                    6     0 = idle   
+                                          1 = busy
+                                    5     0 = no data in buffer
+                                          1 = data in buffer que
+                                    4     1 = parity error
+                                    3     1 = framing error
+                                    2     1 = other error
+                                    1     1 = receiving data
+                                    0     1 = ready to send data
+
+FD50              XMITDATA    RS-232 sending data buffer
+FD5F              KEYGETPTR   Pointer into keyboard buffer for next
+                              keypress to retrieve
+FD61              KEYPUTPTR   pointer into keyboard buffer for
+                              location to store next keypress
+FD63              KEYBUF      keyboard buffer (16 bytes)
+FD73              RXDBUFCNT   number of characters in RS-232 buffer
+FD74              RXDBUFPUT   temporary storage for RS-232 variables
+FD75              RXDBUFGET
+FD76              RXDBUFFER   RS-232 data receiving buffer (60
+                              characters)
+
+FDFD              INTVECTOR   main entry point to interupt routine
+                              (jumps to F637 on AUG version, F517 on
+                              DEC and MAY versions,)
+
+FE00              @BUFFER     256 byte disk and general I/O buffer
+                              used mostly by the RAM disk you can put 
+                              your own code here if it is ok to
+                              overwrite when  not in use
+
+FF00              FORCEMAP    MMU configuration register
+FF01              BANK0       force to MMU value of 3F
+FF02              BANK1                               7F (default for TPA
+                                                      operation)
+FF03              IO0                                 3E
+FF04              IO1                                 7E
+
+FFD0              ENABLEZ80   8502 code to switch to Z-80 mode
+FFDC              RETURNZ80
+
+FFE0              ENABLE6502        Z-80 code to switch to 8502 mode
+FFEE              RETURN6502
+
+
+BANK 1 :    MMU configuration register value $7F, or preconfig
+register #2 (FF02)
+
+BANK 1 is the transient program bank.  All transient programs
+operate in this bank. 
+
+0000-0002         Jump to BIOS warm start entry BIOS_BASE + 3  
+
+0004              high nibble =     current user number (0 to 0F hex)
+                  low nibble =      current default drive (0 to 0F hex,
+                                    0=A:, etc.)
+
+0005-0007         Jump to BDOS entry point (address stored in 0006-
+                  0007, points to EE06 on AUG, EA06 on DEC and MAY.)
+                  Note: this address also marks the end of the TPA. 
+                  It can be artificially lowered for use by resident
+                  programs such as RSX's.
+
+0008-004F         reserved for RST 1 to 7 functions but not normally
+                  used in BANK 1.
+
+(Note:      Locations 0050 to 007B are set automatically by the CCP
+            when a transient program is loaded.  The transient
+            program can then check this areas for parameters which
+            may have been passed from the console in the form of a
+            command tail.)
+
+0050              drive from which latest transient program was
+                  loaded, 1=A:, 2=B:, ... 16=P:
+
+0051-0052         pointer to password of first operand in command
+                  tail (points to a location in the CCP buffer
+                  starting at 0080).  It is set to 0 if no password
+                  specified.
+
+0053              length of first password.  Set to 0 if no
+                  password.
+
+0054-0055         pointer to password of second operand in command
+                  tail.  Set to 0 if no password specified.
+
+0056              length of second password.  Set to 0 if no
+                  password.
+
+005C-007B         default parsed file control block (FCB) area:
+           005C-006B          initialized from first command tail
+                              operand
+           006C-007B          initialized from second command tail
+                              operand
+
+(Note:      The FCB areas are normally 32 bytes long each.  Thus,
+            the second FCB area must be moved to an unused area
+            before the first FCB area can be used or else it will
+            be overwritten.)
+
+007C              current record position for default FCB 1.
+
+007D-007F         current random record position for default FCB 1.
+
+0080-00FF         default 128 byte disk buffer and CCP input buffer. 
+                  On initial entry from CCP, 80 contains the number
+                  of bytes in the command tail, and 81 onwards,
+                  contains the actual command tail, including all
+                  leading and trailing spaces that were entered on
+                  the keyboard, all ending with a binary 0 byte.
+
+0100-E9FF         58 k transient program area (TPA) DEC and MAY
+                  versions
+                  (0100-EDFF  59 k TPA on AUG version)
+
+E000-FFFF         common with BANK 0 (top of TPA, also BDOS, BIOS,
+                  etc.)
+
+
+
+BANK 2 :    MMU configuration register value $3E, or preconfig
+register #3 (FF03)
+ 
+This bank, which I have arbitrarily called BANK 2, is mostly the
+same as BANK 0 with the exception that the 40 column video color
+and I/O are mapped into context:
+
+1000 to 13FF      VICCOLOR    color map for 40 col screen
+
+Note:       This bank must also be in context to access the MMU
+            chip registers at D500 in the Z-80 I/O mapped area.
+
+
+Z-80 I/O mapped area:
+
+In addition to the normal memory mapping which includes RAM and
+ROM, the Z-80 has another addressing mode which is called I/O
+mapping.  This is used to access the chip registers and is
+similar to memory mapping except the Z-80 IN and OUT instructions
+must be used instead of LD type instructions.  The two most
+commonly used ones are:
+ 
+IN A,(C)    which will read the value of the I/O port (chip
+            register) addressed by .BC into the .A register
+OUT (C),A   which will write the value of .A to the I/O port
+            addressed by .BC
+
+In both cases, .BC is a 16 bit address and .A is an 8 bit value. 
+The C-128 I/O chips appear at their normal address locations in
+the I/O area as outlined below and can be programmed directly by
+the experienced user.  Note that you must be careful when playing
+with register values because CP/M expects most of them to be set
+in certain ways.  Changing these settings may cause a system
+crash.  If no chip register is present at the specified address,
+the underlying RAM or ROM is written/read.
+
+0000 to 0FFF                  image of RAM mapped down from D000 to
+DFFF of BANK 0.
+
+1000 to 13FF      VICCOLOR    color map for 40 col screen
+
+
+Chip registers:
+
+D000                    VIC
+
+D400                    SID
+
+D500                    MMU
+
+D600                    8563 80 column chip
+
+D800                    VICCH VIC 40 col color map
+
+DC00                    CIA #1
+
+DD00                    CIA #2
+
+DE00                    external 6551 USART
+           DE00 TXD6551    (send and receive data register)
+           DE01 RESET6551  (write only)
+           DE01 STATUS6551 (when read)
+           DE02 COMMAND6551
+           DE03 CONTROL6551
+
+
+DF00                    RAM expander DMA controller chip
+
+
+
+8502 mode
+
+Surprisingly, the CP/M side of the C-128 also makes use of the
+8502 side, including the KERNAL ROM's for some of the low level
+I/O operations, especially serial port communication.  In 8502
+mode, RAM from 0000 to 01FF is common between the banks.  Note
+that this is different than normal C-128 mode which has common
+RAM from 0000 to 03FF.  The most important implication of this
+that the KERNAL JSFAR, JMPFAR, INDFET, INDSTA, and INDCMP
+routines for bank manipulation cannot be used because they all
+rely on code which is no longer in common RAM (it is above 0200). 
+Once in 8502 mode, you can switch in the KERNAL and BASIC ROM's
+by writing a value of 0 to the MMU configuration register, but
+remember to switch them out again before returning to the Z-80.
+
+Most of the memory map is similar to the Z-80 side with the
+exception of the low end.  This low end area is very similar to
+that used in normal C-128 mode except as noted below.
+
+
+BANK 0 :    MMU configuration register value $3F, or preconfig
+register #1 (FF01)
+
+BIOS 8502 working storage
+000A              current     printer device number
+000B                          printer secondary address
+000C                          disk drive data channel #
+000D                          disk drive command channel #
+000E                          disk drive device #
+000F to 0012                  temporary storage pointers
+
+0013 to 008F            unused zero page RAM where you can stash your
+                        own 8502 code (pointers normally used in C-
+                        128 mode, but not required in CP/M mode)
+
+0090 to 00CA            KERNAL pointers required for disk and printer
+                        I/O same as C-128 mode 
+
+00CC to 00FF            normally unused zero page RAM
+
+0100 to 0200            various KERNAL pointers, 8502 stack, etc. 
+                        some unused locations but too chopped up to
+                        put any custom code here.
+
+0201 to 02FF            basically unused, you can put some of your
+                        custom 8502 code here if you wish
+
+0300 to 0333            system vectors  (same as C-128 mode)
+
+0334 to 0361            unused?
+
+0362 to 037F            logical file tables
+
+0380 to 09FF            unused?
+
+0A03                    FF=50 Hz, PAL; 0=60 Hz, NTSC
+
+0A1C                    serial bus fast flag
+
+Other areas up to 0FFF are used sporadically.  Large open spaces
+exist in the cassette buffer (0B00 to 0BFF) and C-128 mode RS-232
+buffers (0C00 to 0DFF).  These can be used for custom 8502 code.
+
+1000 and up             common with Z-80 side in BANK 0.
+
+The following area is used for the BIOS 8502 code when the 8502
+is switched in during CP/M operations:
+
+2600-2A40         BIOS8502    8502 BIOS code (all code here is in
+                              standard 8502 machine language)
+
+BIOS8502 function       Jump Table Entry        Points to code at
+
+                        AUG   MAY/DEC           AUG         MAY/DEC
+-1     reset            260F  2614              2625        262E
+0     initialize        2611  2616              2654        265D
+1     read 1541         2613  2618              2682        2690
+2     write 1541        2615  261A              26B0        26BE
+3     read 1571/81      2617  261C              26F9        2707
+4     write 1571/81     2619  261E              26F6        2704
+5     inquire disk      261B  2620              270E        271C
+6     query disk        261D  2622              2740        274E
+7     printer           261F  2624              2776        2784
+8     format disk       2621  2626              27AC        27E2
+9     user code         2623  2628              262B*       2634
+a     17xx read         n/a   262A              n/a         2820
+b     17xx write        n/a   262C              n/a         2823
+-----------------------------------------------------------------
+
+ * NOTE:    there is an error in the code at 262B of the AUG
+            version.The byte value is $C3 and it should be $6C for
+            a JMP (xxxx).  This means that 8502 BIOS subfunction 9
+            (jump to custom user 8502 code) does not work on the
+            AUG version unless you first correct this bug!!
+
+ 
+BIOS8502  IRQ, BRK and NMI vectors point to 29AE on the AUG
+version and 29F0 on the MAY and DEC  ver.  These point to dummy
+code which does nothing.  Other I/O vectors are unchanged.
+
+
+BANK 1 :    MMU configuration register value $7F, or preconfig
+register #2 (FF02)
+
+0000 to 01FF      common with BANK 0
+
+0200 to FFFF      common with Z-80 memory map in BANK 1
+
+
+Note:       You cannot normally access the CP/M TPA zero page or
+            page 1 directly from 8502 mode because it is replaced
+            by the BANK 0 common RAM when the 8502 is turned on.

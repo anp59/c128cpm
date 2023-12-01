@@ -1,0 +1,435 @@
+CPM2.TXT rev 1a 96-11-01
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+      THIS DOCUMENT IS COPYRIGHT (C) 1988, 1996 BY HERNE DATA
+      SYSTEMS LTD.  THE MATERIAL CONTAINED HEREIN MAY BE FREELY
+      USED FOR PERSONAL INFORMATION ONLY.  IF YOU REPRODUCE IT,
+      THIS COPYRIGHT NOTICE MUST NOT BE REMOVED.  THIS MATERIAL
+      MAY NOT BE EXPLOITED FOR COMMERCIAL PURPOSES.
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+Herne Data Systems Ltd., 
+PO Box 250, Tiverton, ON N0G 2T0 CANADA.  
+Voice/fax 519-366-2732, 
+e-mail herne@herne.com
+internet: http://www.herne.com
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Internal CCP Commands
+=====================
+
+CP/M's resident command line interpreter, the CCP (Console Command
+Processor) is  a special kind of transient program comprised of two
+main parts: a program loader module and a resident command module. 
+Both parts are contained in the file CCP.COM, which is
+automatically loaded from the default drive (normally drive A:) by
+CP/M during the cold boot-up process (i.e. initial start up of
+CP/M).  System control is then passed to the CCP which initializes
+a number of system parameters, copies itself to a buffer in bank 0,
+then displays the familiar CP/M system prompt (A>) and awaits your
+instructions.  (Note: There are numerous CCP replacement programs
+available which add to or enhance the commands available in the
+standard CCP.  These are not described in this book)
+
+The program loader module of the CCP is used to read transient
+utilities from disk into the Transient Program Area, or TPA, then
+pass control to the transient program.  It moves itself into the
+top of the TPA so that it can load the required file into the
+beginning of the TPA without overwriting, and thus corrupting,
+itself in the process.  Because some space is required at the top
+of the TPA, the largest file which can be loaded by the CCP is 58
+k bytes, on the AUG version of C-128 CP/M and 59 k on the DEC and
+MAY versions.  Upon completion of the transient program, the CCP is
+re-loaded from the buffer in bank 0 back into the TPA to await the
+next instruction.
+
+The command module of the CCP contains six fundamental commands as
+outlined below.  Note that the resident version of these commands
+is generally a 'plain vanilla' variety in that if you want to do
+anything fancy like access password protected files or invoke
+command options, you need to use an extended transient version of
+the command.  The transient equivalents are stored as separate disk
+files with the same name as the internal commands and a file type
+of COM.  If you want to bypass the resident versions and access the
+full transient versions directly, precede the command name with a
+drive specifier.  For example:  DIR <return> will default to the
+internal command DIR, while A:DIR <return> will access the
+transient command DIR.COM on drive A:.  The transient versions of
+each command are detailed in document "External Utilities".
+
+Changing the Current Drive
+
+The currently logged or default disk drive is the drive where CP/M
+looks for files if no drive specifier is explicitly included in the
+filespec.  The currently logged drive is displayed as part of the
+system prompt in the form of:
+
+            [user#][drive] >
+
+such as 2A> to indicate that the system is currently logged onto
+user area 2 on drive A:.
+
+To change the current drive, type in the new drive letter followed
+by a colon and a <return>.  For example:
+
+      b: <return>
+or    B: <return>
+
+will change the currently logged drive to B:.  If you are already
+logged onto drive B:, nothing will appear to happen.  However, if
+you are logged onto another drive, the systems prompt will be
+changed to reflect the new drive.  Changing the drive does not
+change the user area.  For example, if you were logged on to USER
+2  on drive A:, then switched to drive B:, you would be logged on
+to USER 2 on drive B:.  See USER below to change the user area.
+
+CP/M, in general, supports up to 16 logical drives, labelled A: to
+P:.  The physical  nature of the logical drives is totally
+transparent to CP/M commands and programs. These may be any
+combination of floppy drives, hard drives, RAM disks and other
+special devices.  In addition, more than one logical drive can be
+mapped to a single physical drive.  On the standard C-128
+implementation, only 5 or 6 logical drives are actually used. 
+These are:
+
+DRIVE             DEVICE
+
+A:          serial port device 8, drive 0
+B:          serial port device 9, drive 0
+C:          serial port device 10, drive 0
+D:          serial port device 11, drive 0
+E:          serial port device 8, drive 0  
+            (The virtual drive shares physical drive A:)
+M:          17xx RAM expansion unit       (The RAM disk on CP/M versions
+                                          dated 6 DEC 85 or later.)
+
+
+The default device and drive numbers can be readily changed using
+a program such as CONF.COM.
+
+Soft Reset
+
+If you type in a <control>-C (i.e. hold down the key marked
+'CONTROL', while pressing the C key) at the system prompt, all
+currently logged-in disk drives will become 'un-logged-in'.  This
+has the effect of re-setting the disk system and cancelling all
+previous disk error conditions.  This is also know as a 'warm boot'
+or 'soft start'. 
+
+If during the course of running an internal command or a transient
+utility, the system aborts with an error message that starts of
+similar to:
+
+      BDOS Error on ... (etc) or
+
+      BIOS Error on...(etc)
+
+
+then it is a wise idea to reset the disk system with a <control>-C
+before trying anything else.  Failing to do so, may just result in
+the command being ignored and the error condition reported again.
+
+<control>-C is also used by the resident commands, and many
+transient commands as well, as a general "stop-what-you-are-doing-
+and-return-to-system-level" command.  That is, it will terminate
+directory displays, TYPE displays, etc.  It should be noted that
+many transient programs will trap the <control>-C key press and use
+the command for their own purposes, such as a custom exit routine.
+
+NOTE:       <control>-C should be used with caution from within a
+            transient program, especially if you do not know the
+            command structure of the program.  It may terminate the
+            program and leave you out in the cold with no practical
+            way to recover any data that you may have previously
+            entered but not saved.  For your own programs, you can
+            disable <control>-C by using BDOS function 6Dh, described
+            in the document "The CP/M BDOS".
+
+
+DIR
+
+The DIR command displays the names of files and, optionally the
+characteristics associated with the files. It has three forms:
+
+          DIR
+          DIRSYS
+          DIR (with Options)
+
+DIR and DIRSYS are CCP resident commands.   DIR (with Options) is
+a transient utility and must be loaded into memory from the disk. 
+DIRSYS can be abbreviated to DIRS.  The general syntax for both DIR
+and DIRS is:
+
+                  DIR  {d:}
+                  DIR  {ambiguous filespec}
+
+                  DIRS {d:}
+                  DIRS {ambiguous filespec}
+
+The DIR and DIRS resident commands display the names of files
+cataloged in the current user area of the directory of a disk.  DIR
+lists the names of files in the current user number that have the
+Directory (DIR) attribute set.  These would include most, if not
+all, normal files on the disk.  (When a file is created, it is
+normally given the directory attribute unless you specifically set
+one of the other available attributes using the SET command or its
+BDOS function call equivalent.)  DIRS lists all files on the disk
+with the System (SYS) attribute set.  If system files are present
+on a disk subjected to the DIR command, then the directory display
+will also include the message:
+
+      System file(s) exist.
+
+Similarly, if files with the DIR attribute exist on a disk
+subjected to the DIRS command, then the message:
+
+      Non-System file(s) exist
+
+will appear along with the directory listing.  If no files are in
+the current user area on the disk, then the message 'No File' is
+displayed.    DIR and DIRS will accept ambiguous filename
+references (using the * and ? wildcards) in the file specification
+for global pattern matching.   
+
+For example:
+
+Command                 What it does
+
+DIR                     Displays all files in the current user area on
+                        the current drive that  have the Directory
+                        (DIR) attribute set.
+
+DIR B:                  Displays all DIR files in the current user
+                        area on drive B:.
+
+DIR C:MYFILE.DAT        Displays the name MYFILE.DAT if the file is in
+                        the current  user area on drive C:.
+
+DIR *.BAS               Displays all DIR files with filetype BAS in
+                        the current user area on the current drive.
+
+DIR X*.C?D              Displays all DIR files in the current  user
+                        area and drive whose filename begins with the
+                        letter X, AND whose three character filetype
+                        contains the first character C and last
+                        character D.
+
+DIRS                    Displays all files in the current user area
+                        and drive that have the system (SYS) attribute
+                        set. 
+
+DIRS *.COM              Displays all SYS files with filetype COM in
+                        the current user area and drive.  Note that a 
+                        command (.COM)  file in user 0  with the
+                        system attribute can be accessed from any user
+                        number on that drive,  and from any drive in
+                        the search chain (see SETDEF in "External
+                        Utilities").
+
+
+
+      
+ERASE
+
+The ERASE command removes one or more files from the directory of
+a disk.  Ambiguous file references containing wildcard characters
+('*' and '?') are acceptable in the filespec for deleting more than
+one file which may match the specified pattern.  Directory and data
+space on the disk are automatically reclaimed for later use by 
+another  file.  ERASE can be abbreviated to ERA.  
+
+Note:       the directory entry associated with the specified file(s)
+            is not actually removed from the disk directory.  The
+            first character of the directory field is changed to a
+            hex E5 to indicate an unused entry which remains there
+            until the space is reclaimed by creating a new file.  The
+            old file can be recovered by special programming
+            techniques until either its directory entry, or its
+            allocated space has been re-used.
+
+The syntax of the ERASE command is:
+
+       ERASE {ambiguous filespec} 
+
+For example:
+
+Command                 What it does
+
+ERASE TEST.BAS          Removes the file TEST.BAS from the current
+                        user area in the current drive.
+
+ERA *.PRN               All files with the filetype PRN are removed
+                        from the current user area in the current 
+                        drive.  Note that when a wild card is used in
+                        the filespec, ERASE will prompt you to confirm
+                        that you wish to perform the operation.
+
+ERA C:*.*               All files in the current user area on drive C:
+                        are removed from the disk.  As above, you will
+                        be prompted to confirm your request.
+
+ERA M?X.?M              All files which have a name that is 2 or 3
+                        characters long that begins with M and ends in
+                        X (such as MIX, MAX, MX) AND a file type of
+                        one or two characters that ends with M (such
+                        as M, AM, DM) will be erase from the current
+                        user area in the current  drive.  
+
+
+RENAME
+
+RENAME lets you change the name of a file in the directory of a
+disk.  The files are not physically moved or copied, only the name
+in the directory is changed.  To change several filenames in one
+command use the * or ?  wildcards in the file specifications. 
+RENAME can be abbreviated to REN.  RENAME with no {filespec}
+prompts you for input.  The syntax is:
+
+       RENAME {new_filespec=old_filespec}
+
+
+
+Some examples are:
+
+Command                       What it does
+
+REN FILE1.BAS=FILE2.BAS       The file FILE1.BAS changes to FILE2.BAS
+                              on the current drive and user area.
+
+RENAME                        The system prompts for the filespecs:
+
+                                    Enter New Name:         X.PRN
+                                    Enter Old Name:         Y.PRN
+                                    Y      .PRN=X        .PRN
+          
+                              File X.PRN is then renamed to Y.PRN on
+                              drive A:.
+
+REN A:PRN.NEW=PRN.OLD         The file PRN.OLD on drive A: changes to
+                              PRN.NEW.
+
+RENAME X*.BAK=Z*.DOC          This command renames all the files
+                              matching Z*.DOC to files with filenames
+                              S*.BAK.
+
+REN B:NEW=B:OLD               The file OLD changes to NEW on drive B:. 
+                              Since the second drive specifier, B: is
+                              implied by the first one, it is
+                              unnecessary in this example.  The command
+                              line above has the same effect as the
+                              following:
+
+                                    REN B:NEW=OLD
+                                          or
+                                    REN NEW=OLD
+
+However, you cannot RENAME across drives.  Therefore:  
+
+      REN A:FILE=B:FILE
+
+is not legal.
+
+
+TYPE
+
+The TYPE command displays the contents of an ASCII character file
+on your screen. (Strictly speaking, TYPE will display the contents
+of any file, but only ones with ASCII text, or WordStar style text,
+will make any sense when viewed.)  TYPE will NOT accept wildcards
+in the filename.  The general syntax is:
+
+          TYPE {unambiguous filespec}
+
+
+      For example,
+
+Command                 What it does
+
+TYPE LETTER.DOC         Displays the contents of the file LETTER.DOC
+                        from the current drive on your screen.
+
+TYPE B:LETTER.DOC       Displays the contents of the file LETTER.DOC
+                        from drive B: on your screen. 
+
+
+
+You can also get a printed copy of the file by pressing <control>-P
+using TYPE to toggle the printer echo on.  Everything that is
+displayed on the screen will then be echoed to the printer.  To
+start printing in the middle of a display, press <control>-S to
+stop the display, then <control>-P to activate the printer and
+<control>-Q to resume the display.  Only text which is displayed
+after the <control>-P will be echoed to the printer.
+
+TYPE will normall display 23 lines, then prompt to press a key for
+the next page.  This feature can be de-activated using the [NO
+PAGE] option of the TYPE.COM transient utility.  
+
+You can press <control>-C to abort the display at any time.
+
+
+USER
+
+The USER command sets the current user number.    The disk
+directory can be sub-divided into distinct areas, generally called
+a 'user area' according to a "User Number."  User numbers range
+from 0 through 15.  These can be considered to be a form of a
+subdirectory, although the directory entries for all user areas
+occupy part of the same physical directory area on the disk.  The
+default user area is 0.
+
+Files located in one user area are not generally accessible from
+other user areas without special programming techniques.  The
+general exception to this rule is files in user 0 which have the
+system attribute set.  These files are available in all user areas. 
+File copying programs such as PIP can copy from any user area to
+any other one, provided that PIP is accessible in the currently
+selected user area.  
+
+Note that the currently selected user number is the same for all
+drives.   That is, if you are on drive A: in user area 4, changing
+to drive B: will automatically put you into user area 4 on drive
+B:.  The current user area is displayed as part of the system
+prompt in the form of:
+
+            [user#][drive] >
+
+such as 2A> to indicate that the system is currently logged onto
+user area 2 on drive A:.
+
+The syntax for the USER command is:
+
+                  USER {number}
+
+where {number} is the desired user area, expressed as a decimal
+number from 0 to 15.  For example,
+
+
+Command                 What it does
+
+USER                    The CCP prompts you to enter the desired user
+                        number:
+
+                              Enter User#:
+ 
+                        To which you can respond:           5
+
+                        and the current user number will be set at 5. 
+                        This is indicated by the system prompt which
+                        will read 5A> (if drive A: is currently
+                        selected as the default drive).
+
+USER 3                  This command changes the current user number
+                        to 3.
+
+
+Note:       The USER command does not reserve certain segments of the
+            disk for a given area, nor does it create special
+            additional directory areas or sub-directories.  The files
+            for all 'user areas' are physically mixed on the disk. 
+            Files for each area are identified in the directory by a
+            control byte in the directory entry.  (See "The Disk
+            System" for additional information.) 
+
+  
